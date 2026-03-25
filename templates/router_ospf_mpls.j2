@@ -1,0 +1,44 @@
+hostname {{ hostname }}
+!
+no ip domain lookup
+!
+! --- Configuration Globale MPLS ---
+mpls label protocol ldp
+mpls ldp router-id Loopback0 force
+!
+! --- Interface Loopback (Identité du routeur) ---
+interface Loopback0
+ ip address {{ loopback_ip }} 255.255.255.255
+!
+! -------- Physical links (Backbone only) --------
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ description link to {{ intf.neighbor }}
+ ip address {{ intf.ip }} {{ intf.mask }}
+ ! On n'active MPLS que si c'est True dans le JSON
+ {% if intf.mpls %}
+  mpls ip
+ {% endif %}
+ no shutdown
+{% endfor %}
+
+! -------- OSPFv2 (IPv4) process --------
+router ospf 1
+ router-id {{ router_id }}
+ 
+ ! Sécurité : On n'écoute que sur les liens internes
+ passive-interface default
+ no passive-interface Loopback0
+ {% for intf in interfaces if intf.mpls %}
+ no passive-interface {{ intf.name }}
+ {% endfor %}
+
+ ! Annonce de la Loopback et des liens physiques
+ network {{ loopback_ip }} 0.0.0.0 area 0
+ {% for intf in interfaces if intf.mpls %}
+ network {{ intf.network_ip }} 0.0.0.3 area 0
+ {% endfor %}
+ 
+ ! Activation automatique du MPLS sur tout ce qui est dans OSPF
+ mpls ldp autoconfig
+!
