@@ -5,8 +5,9 @@ from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 import argparse
 import os
 import sys
+import json
 
-
+intent_data = json.load(open("intent/network.json"))
 def print_help():
     print("Usage: python main.py [--file <intent_file>] [--output <output_folder>] [--deploy]")
     print("\nOptions:")
