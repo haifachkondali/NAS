@@ -1,0 +1,50 @@
+hostname {{ hostname }}
+!
+! Enable IPv6 routing on the router
+ipv6 unicast-routing
+!
+
+! Ensure community format is consistent when displaying/handling BGP communities
+! (safe even if BGP is configured separately)
+ip bgp-community new-format
+!
+
+! -------- Loopback (router identity + iBGP endpoint) --------
+default interface Loopback0
+interface Loopback0
+ no ip address
+ ipv6 enable
+ ipv6 address {{ loopback_ip }}/128
+ no shutdown
+ ! Enable RIPng on loopback so the /128 is routable inside the AS
+ ipv6 rip {{ AS_name }} enable
+!
+
+! -------- Physical links (IPv6 + RIPng) --------
+{% for intf in interfaces %}
+default interface {{ intf.name }}
+interface {{ intf.name }}
+ no ip address
+ ipv6 enable
+ ipv6 address {{ intf.ip }}/64
+ no shutdown
+ ipv6 rip {{ AS_name }} enable
+!
+{% endfor %}
+
+! -------- Redistribution safety (avoid IGP <-> BGP loops) --------
+! Block re-injection of routes tagged as "local" (asn:10) when redistributing
+! BGP -> RIPng to prevent redistribution loops.
+ip community-list standard CL-LOCAL-AS permit {{ asn }}:10
+!
+route-map RM-BGP-TO-RIP deny 10
+ match community CL-LOCAL-AS
+!
+route-map RM-BGP-TO-RIP permit 20
+!
+
+! -------- RIPng process --------
+ipv6 router rip {{ AS_name }}
+ ! Redistribute BGP into RIPng with a fixed metric and loop-prevention route-map
+ redistribute bgp {{ asn }} metric 1 route-map RM-BGP-TO-RIP
+!

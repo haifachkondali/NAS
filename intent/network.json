@@ -1,0 +1,104 @@
+{
+  "autonomous_systems": {
+    "AS_X": {
+      "as_number": 65001,
+      "igp": "RIP",
+      "address_plan": {
+        "physical_base": "2001:1:",
+        "loopback_base": "FC00:0:0:"
+      },
+      "routers": [
+        {
+          "hostname": "R1",
+          "id": 1,
+          "console_port" : 5014,
+          "interfaces": [{ "name": "FastEthernet0/0", "neighbor": "R2" }]
+        },
+        {
+          "hostname": "R2",
+          "id": 2,
+          "console_port" : 5015,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R1" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R3" }
+          ]
+        },
+        {
+          "hostname": "R3",
+          "id": 3,
+          "console_port" : 5016,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R2" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R4", "remote_as": 65002 }
+          ]
+        }
+      ]
+    },
+    "AS_Y": {
+      "as_number": 65002,
+      "igp": "OSPF",
+      "address_plan": {
+        "physical_base": "2001:2:",
+        "loopback_base": "FC00:0:0:"
+      },
+      "neighbors": {
+        "65001": {
+          "relationship": "peer",
+          "bgp_type": "eBGP",
+          "community_in": "65002:20"
+        },
+        "65003": {
+          "relationship": "provider",
+          "bgp_type": "eBGP",
+          "export_policy": "ONLY_COMMUNITY_65002_20"
+        }
+      },
+      "routers": [
+        {
+          "hostname": "R4",
+          "id": 4,
+          "console_port" : 5017,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R5", "ospf_cost": 100 },
+            { "name": "GigabitEthernet1/0", "neighbor": "R3", "remote_as": 65001 },
+            { "name": "GigabitEthernet2/0", "neighbor": "R7", "remote_as": 65003 }
+          ]
+        },
+        {
+          "hostname": "R5",
+          "id": 5,
+          "console_port" : 5018,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R4" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R6" }
+          ]
+        },
+        {
+          "hostname": "R6",
+          "id": 6,
+          "console_port" : 5019,
+          "interfaces": [{ "name": "FastEthernet0/0", "neighbor": "R5" }]
+        }
+      ]
+    },
+
+    "AS_Z": {
+      "as_number": 65003,
+      "igp": "RIP",
+      "address_plan": {
+        "physical_base": "2001:3:",
+        "loopback_base": "FC00:0:0:"
+      },
+      "routers": [
+        {
+          "hostname": "R7",
+          "id": 7,
+          "console_port": 500,
+          "interfaces": [
+            { "name": "GigabitEthernet1/0", "neighbor": "R4", "remote_as": 65002 }
+          ]
+        }
+      ]
+    }
+  }
+}

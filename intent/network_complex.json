@@ -1,0 +1,182 @@
+{
+  "autonomous_systems": {
+    "AS_X": {
+      "as_number": 65001,
+      "igp": "RIP",
+      "address_plan": {
+        "physical_base": "2001:1:",
+        "loopback_base": "FC00:0:0:"
+      },
+      "neighbors": {
+        "65002": {
+          "relationship": "peer",
+          "bgp_type": "eBGP"
+        }
+      },
+      "routers": [
+        {
+          "hostname": "R1",
+          "id": 1,
+          "console_port" : 5020,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R2" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R3" }
+          ]
+        },
+        {
+          "hostname": "R2",
+          "id": 2,
+          "console_port" : 5021,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R1" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R3" },
+            { "name": "GigabitEthernet2/0", "neighbor": "R4" }
+          ]
+        },
+        {
+          "hostname": "R3",
+          "id": 3,
+          "console_port" : 5022,
+          "interfaces": [
+            { "name": "GigabitEthernet1/0", "neighbor": "R1" },
+            { "name": "FastEthernet0/0", "neighbor": "R2" },
+            { "name": "GigabitEthernet2/0", "neighbor": "R5" }
+          ]
+        },
+        {
+          "hostname": "R4",
+          "id": 4,
+          "console_port" : 5023,
+          "interfaces": [
+            { "name": "GigabitEthernet2/0", "neighbor": "R2" },
+            { "name": "FastEthernet0/0", "neighbor": "R5" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R6" },
+            { "name": "GigabitEthernet3/0", "neighbor": "R7" }
+          ]
+        },
+        {
+          "hostname": "R5",
+          "id": 5,
+          "console_port" : 5024,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R4" },
+            { "name": "GigabitEthernet2/0", "neighbor": "R3" },
+            { "name": "GigabitEthernet3/0", "neighbor": "R6" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R7" }
+          ]
+        },
+        {
+          "hostname": "R6",
+          "id": 6,
+          "console_port" : 5025,
+          "interfaces": [
+            { "name": "GigabitEthernet1/0", "neighbor": "R4" },
+            { "name": "GigabitEthernet3/0", "neighbor": "R5" },
+            { "name": "FastEthernet0/0", "neighbor": "R8", "remote_as": 65002 }
+          ]
+        },
+        {
+          "hostname": "R7",
+          "id": 7,
+          "console_port" : 5026,
+          "interfaces": [
+            { "name": "GigabitEthernet3/0", "neighbor": "R4" },
+            { "name": "GigabitEthernet1/0", "neighbor": "R5" },
+            { "name": "FastEthernet0/0", "neighbor": "R9", "remote_as": 65002 }
+          ]
+        }
+      ]
+    },
+
+    "AS_Y": {
+      "as_number": 65002,
+      "igp": "OSPF",
+      "address_plan": {
+        "physical_base": "2001:2:",
+        "loopback_base": "FC00:0:0:"
+      },
+      "neighbors": {
+        "65001": {
+          "relationship": "peer",
+          "bgp_type": "eBGP",
+          "community_in": "65002:20"
+        }
+      },
+      "routers": [
+        {
+          "hostname": "R8",
+          "id": 8,
+          "console_port" : 5027,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R6", "remote_as": 65001 },
+            { "name": "GigabitEthernet1/0", "neighbor": "R10", "ospf_cost": 10 },
+            { "name": "GigabitEthernet3/0", "neighbor": "R11", "ospf_cost": 10 }
+          ]
+        },
+        {
+          "hostname": "R9",
+          "id": 9,
+          "console_port" : 5028,
+          "interfaces": [
+            { "name": "FastEthernet0/0", "neighbor": "R7", "remote_as": 65001 },
+            { "name": "GigabitEthernet3/0", "neighbor": "R10", "ospf_cost": 20 },
+            { "name": "GigabitEthernet1/0", "neighbor": "R11", "ospf_cost": 20 }
+          ]
+        },
+        {
+          "hostname": "R10",
+          "id": 10,
+          "console_port" : 5029,
+          "interfaces": [
+            { "name": "GigabitEthernet1/0", "neighbor": "R8", "ospf_cost": 10 },
+            { "name": "GigabitEthernet3/0", "neighbor": "R9", "ospf_cost": 20 },
+            { "name": "FastEthernet0/0", "neighbor": "R11", "ospf_cost": 5 },
+            { "name": "GigabitEthernet2/0", "neighbor": "R13", "ospf_cost": 50 }
+          ]
+        },
+        {
+          "hostname": "R11",
+          "id": 11,
+          "console_port" : 5030,
+          "interfaces": [
+            { "name": "GigabitEthernet3/0", "neighbor": "R8", "ospf_cost": 10 },
+            { "name": "GigabitEthernet1/0", "neighbor": "R9", "ospf_cost": 20 },
+            { "name": "FastEthernet0/0", "neighbor": "R10", "ospf_cost": 5 },
+            { "name": "GigabitEthernet2/0", "neighbor": "R14", "ospf_cost": 50 }
+          ]
+        },
+        {
+          "hostname": "R13",
+          "id": 13,
+          "console_port" : 5032,
+          "interfaces": [
+            { "name": "GigabitEthernet2/0", "neighbor": "R10", "ospf_cost": 50 },
+            { "name": "GigabitEthernet3/0", "neighbor": "R14", "ospf_cost": 10 },
+            { "name": "GigabitEthernet1/0", "neighbor": "R12", "ospf_cost": 100 }
+          ]
+        },
+        {
+          "hostname": "R14",
+          "id": 14,
+          "console_port" : 5033,
+          "interfaces": [
+            { "name": "GigabitEthernet2/0", "neighbor": "R11", "ospf_cost": 50 },
+            { "name": "GigabitEthernet3/0", "neighbor": "R13", "ospf_cost": 10 },
+            { "name": "FastEthernet0/0", "neighbor": "R12", "ospf_cost": 100 }
+          ]
+        },
+        {
+          "hostname": "R12",
+          "id": 12,
+          "console_port" : 5031,
+          "interfaces": [
+            { "name": "GigabitEthernet1/0", "neighbor": "R13", "ospf_cost": 100 },
+            { "name": "FastEthernet0/0", "neighbor": "R14", "ospf_cost": 100 }
+          ]
+        }
+      ]
+    }
+  }
+}
+
+

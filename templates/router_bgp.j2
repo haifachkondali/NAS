@@ -1,0 +1,101 @@
+! -------- eBGP IN policies (tag + prefer paths) --------
+! For each eBGP neighbor, we can:
+! - tag received routes with a community (for later filtering/export)
+! - set local-preference (to prefer customer > peer > provider)
+{% for ebgp_peer in ebgp_peers %}
+{% if ebgp_peer.route_map_in %}
+route-map {{ ebgp_peer.route_map_in }} permit 10
+{% if ebgp_peer.community_in %}
+ set community {{ ebgp_peer.community_in }} additive
+{% endif %}
+{% if ebgp_peer.local_pref is not none %}
+ set local-preference {{ ebgp_peer.local_pref }}
+{% endif %}
+!
+{% endif %}
+{% endfor %}
+
+! -------- eBGP OUT filtering (community-based export control) --------
+! We define the community-list once, then apply per-neighbor outbound route-maps.
+{% set ns = namespace(cl_defined=false) %}
+{% for ebgp_peer in ebgp_peers %}
+{% if ebgp_peer.community_list and not ns.cl_defined %}
+ip community-list standard {{ ebgp_peer.community_list }} permit {{ ebgp_peer.community_match }}
+!
+{% set ns.cl_defined = true %}
+{% endif %}
+{% endfor %}
+
+{% for ebgp_peer in ebgp_peers %}
+{% if ebgp_peer.route_map_out %}
+route-map {{ ebgp_peer.route_map_out }} permit 10
+ match community {{ ebgp_peer.community_list }}
+!
+route-map {{ ebgp_peer.route_map_out }} deny 100
+!
+{% endif %}
+{% endfor %}
+
+! -------- Tag local routes (used for policies + loop prevention) --------
+route-map RM-TAG-LOCAL permit 10
+ set community {{ asn }}:10 additive
+!
+
+! -------- BGP process --------
+router bgp {{ asn }}
+ bgp router-id {{ router_id }}
+ bgp log-neighbor-changes
+ ! IPv6-only (avoid default IPv4 behavior)
+ no bgp default ipv4-unicast
+ !
+ ! iBGP neighbors: use loopbacks as update-source (stable sessions)
+ {% for peer in ibgp_peers %}
+ neighbor {{ peer.ip }} remote-as {{ asn }}
+ neighbor {{ peer.ip }} update-source Loopback0
+ {% endfor %}
+ !
+ ! eBGP neighbors: external AS connectivity
+ {% for ebgp_peer in ebgp_peers %}
+ neighbor {{ ebgp_peer.ip }} remote-as {{ ebgp_peer.remote_as }}
+ neighbor {{ ebgp_peer.ip }} update-source {{ ebgp_peer.interface }}
+ {% endfor %}
+ !
+ address-family ipv6 unicast
+  !
+  ! Advertise local loopback into BGP and tag it as "local" (asn:10)
+  network {{ loopback_ip }}/128 route-map RM-TAG-LOCAL
+  !
+  ! Optional: advertise connected routes (also tagged)
+  redistribute connected route-map RM-TAG-LOCAL
+  !
+  ! Note: no IGP -> BGP redistribution here to avoid tagging non-local paths as local
+  !
+
+  ! iBGP activation + community propagation
+  {% for peer in ibgp_peers %}
+  neighbor {{ peer.ip }} activate
+  neighbor {{ peer.ip }} send-community
+  neighbor {{ peer.ip }} next-hop-self
+  {% endfor %}
+
+  ! eBGP activation
+  {% for ebgp_peer in ebgp_peers %}
+  neighbor {{ ebgp_peer.ip }} activate
+  {% endfor %}
+
+  ! Apply inbound policies on eBGP sessions
+  {% for ebgp_peer in ebgp_peers %}
+  {% if ebgp_peer.route_map_in %}
+  neighbor {{ ebgp_peer.ip }} route-map {{ ebgp_peer.route_map_in }} in
+  {% endif %}
+  {% endfor %}
+
+  ! Apply outbound export filters on selected eBGP sessions
+  {% for ebgp_peer in ebgp_peers %}
+  {% if ebgp_peer.route_map_out %}
+  neighbor {{ ebgp_peer.ip }} route-map {{ ebgp_peer.route_map_out }} out
+  {% endif %}
+  {% endfor %}
+
+ exit-address-family
+!
