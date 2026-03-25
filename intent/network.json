@@ -11,7 +11,7 @@
       {
         "hostname": "P1",
         "router_id": "10.0.0.2",
-        "loopback0": "10.0.0.2/32",
+        "loopback0": "10.0.0.2",
         "interfaces": [
           { "name": "GigabitEthernet1/0", "ip": "10.0.12.2", "mask": "255.255.255.252", "neighbor": "PE1", "mpls": true },
           { "name": "GigabitEthernet2/0", "ip": "10.0.23.1", "mask": "255.255.255.252", "neighbor": "P2", "mpls": true }
@@ -20,7 +20,7 @@
       {
         "hostname": "P2",
         "router_id": "10.0.0.3",
-        "loopback0": "10.0.0.3/32",
+        "loopback0": "10.0.0.3",
         "interfaces": [
           { "name": "GigabitEthernet1/0", "ip": "10.0.34.1", "mask": "255.255.255.252", "neighbor": "PE2", "mpls": true },
           { "name": "GigabitEthernet2/0", "ip": "10.0.23.2", "mask": "255.255.255.252", "neighbor": "P1", "mpls": true }
@@ -31,7 +31,7 @@
       {
         "hostname": "PE1",
         "router_id": "10.0.0.1",
-        "loopback0": "10.0.0.1/32",
+        "loopback0": "10.0.0.1",
         "ibgp_to": "10.0.0.4",
         "client_awareness": {
           "total_clients": 2,
@@ -46,7 +46,7 @@
       {
         "hostname": "PE2",
         "router_id": "10.0.0.4",
-        "loopback0": "10.0.0.4/32",
+        "loopback0": "10.0.0.4",
         "ibgp_to": "10.0.0.1",
         "client_awareness": {
           "total_clients": 2,
