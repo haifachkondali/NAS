@@ -1,0 +1,13 @@
+! -------- MP-BGP Process (iBGP VPNv4) --------
+router bgp {{ asn }}
+ bgp log-neighbor-changes
+ bgp router-id {{ loopback_ip }}
+
+ ! --- Session iBGP vers l'autre PE ---
+ neighbor {{ remote_pe_ip }} remote-as {{ asn }}
+ neighbor {{ remote_pe_ip }} update-source Loopback0
+ 
+ address-family vpnv4
+  neighbor {{ remote_pe_ip }} activate
+  neighbor {{ remote_pe_ip }} send-community both
+ exit-address-family
