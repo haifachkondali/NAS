@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["backbone_as", "igp", "ldp_enabled", "vrfs", "routers"],
+  "properties": {
+    "backbone_as": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "igp": {
+      "type": "string",
+      "enum": ["OSPF", "ISIS", "RIP", "EIGRP"]
+    },
+    "ldp_enabled": {
+      "type": "boolean"
+    },
+    "vrfs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "rd", "rt"],
+        "properties": {
+          "name": { "type": "string" },
+          "rd": { "type": "string" },
+          "rt": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "routers": {
+      "type": "object",
+      "required": ["P_ROUTERS", "PE_ROUTERS", "CE_ROUTERS"],
+      "properties": {
+        "P_ROUTERS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["hostname", "loopback0", "interfaces"],
+            "properties": {
+              "hostname": { "type": "string" },
+              "loopback0": { "type": "string" },
+              "interfaces": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "ip", "mask", "neighbor", "mpls"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "ip": { "type": "string" },
+                    "mask": { "type": "string" },
+                    "neighbor": { "type": "string" },
+                    "mpls": { "type": "boolean" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "PE_ROUTERS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "hostname",
+              "loopback0",
+              "bgp_rid",
+              "ibgp_to",
+              "client_awareness",
+              "interfaces"
+            ],
+            "properties": {
+              "hostname": { "type": "string" },
+              "loopback0": { "type": "string" },
+              "bgp_rid": { "type": "string" },
+              "ibgp_to": { "type": "string" },
+              "client_awareness": {
+                "type": "object",
+                "required": ["total_clients", "sites"],
+                "properties": {
+                  "total_clients": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "sites": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "interfaces": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["name", "ip", "mask", "desc"],
+                  "properties": {
+                    "name": { "type": "string" },
+                    "ip": { "type": "string" },
+                    "mask": { "type": "string" },
+                    "mpls": { "type": "boolean" },
+                    "vrf": { "type": "string" },
+                    "desc": { "type": "string" }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "CE_ROUTERS": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["hostname", "as", "vrf", "interface", "ip", "pe"],
+            "properties": {
+              "hostname": { "type": "string" },
+              "as": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "vrf": { "type": "string" },
+              "interface": { "type": "string" },
+              "ip": { "type": "string" },
+              "pe": { "type": "string" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
