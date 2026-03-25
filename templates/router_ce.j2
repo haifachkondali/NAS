@@ -1,0 +1,15 @@
+hostname {{ hostname }}
+!
+interface {{ interface_name }}
+ ip address {{ ip }} {{ mask }}
+ no shutdown
+!
+router bgp {{ as_number }}
+ bgp router-id {{ ip }}
+ neighbor {{ pe_ip }} remote-as {{ backbone_as }}
+ neighbor {{ pe_ip }} activate
+ !
+ address-family ipv4 unicast
+  neighbor {{ pe_ip }} activate
+  redistribute connected
+ exit-address-family

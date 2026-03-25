@@ -1,0 +1,7 @@
+{% for vrf in vrfs_config %}
+ip vrf {{ vrf.name }}
+ rd {{ vrf.rd }}
+ route-target export {{ vrf.rt }}
+ route-target import {{ vrf.rt }}
+!
+{% endfor %}

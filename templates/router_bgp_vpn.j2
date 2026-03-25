@@ -1,0 +1,12 @@
+router bgp {{ backbone_as }}
+ !
+{% for vrf in vrfs_config %}
+ address-family ipv4 vrf {{ vrf.name }}
+  {% for neighbor in vrf.bgp_neighbors %}
+  neighbor {{ neighbor.ip }} remote-as {{ neighbor.remote_as }}
+  neighbor {{ neighbor.ip }} activate
+  {% endfor %}
+  redistribute connected
+ exit-address-family
+ !
+{% endfor %}
