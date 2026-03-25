@@ -10,6 +10,7 @@
     "P_ROUTERS": [
       {
         "hostname": "P1",
+        "router_id": "2.2.2.2",
         "loopback0": "2.2.2.2/32",
         "interfaces": [
           { "name": "GigabitEthernet1/0", "ip": "10.0.12.2", "mask": "255.255.255.252", "neighbor": "PE1", "mpls": true },
@@ -18,6 +19,7 @@
       },
       {
         "hostname": "P2",
+        "router_id": "3.3.3.3",
         "loopback0": "3.3.3.3/32",
         "interfaces": [
           { "name": "GigabitEthernet1/0", "ip": "10.0.34.1", "mask": "255.255.255.252", "neighbor": "PE2", "mpls": true },
@@ -28,8 +30,8 @@
     "PE_ROUTERS": [
       {
         "hostname": "PE1",
+        "router_id": "1.1.1.1",
         "loopback0": "1.1.1.1/32",
-        "bgp_rid": "1.1.1.1",
         "ibgp_to": "4.4.4.4",
         "client_awareness": {
           "total_clients": 2,
@@ -43,8 +45,8 @@
       },
       {
         "hostname": "PE2",
+        "router_id": "4.4.4.4",
         "loopback0": "4.4.4.4/32",
-        "bgp_rid": "4.4.4.4",
         "ibgp_to": "1.1.1.1",
         "client_awareness": {
           "total_clients": 2,
@@ -58,10 +60,10 @@
       }
     ],
     "CE_ROUTERS": [
-      { "hostname": "CE1", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.1.2/30", "pe": "192.168.1.1" },
-      { "hostname": "CE2", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.2.2/30", "pe": "192.168.2.1" },
-      { "hostname": "CE3", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.3.2/30", "pe": "192.168.3.1" },
-      { "hostname": "CE4", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.4.2/30", "pe": "192.168.4.1" }
+      { "hostname": "CE1", "router_id": "10.10.10.10", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.1.2/30", "pe": "192.168.1.1" },
+      { "hostname": "CE2", "router_id": "20.20.20.20", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.2.2/30", "pe": "192.168.2.1" },
+      { "hostname": "CE3", "router_id": "30.30.30.30", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.3.2/30", "pe": "192.168.3.1" },
+      { "hostname": "CE4", "router_id": "40.40.40.40", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.4.2/30", "pe": "192.168.4.1" }
     ]
   }
 }
