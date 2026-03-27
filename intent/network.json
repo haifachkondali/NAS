@@ -2,68 +2,56 @@
   "backbone_as": 100,
   "igp": "OSPF",
   "ldp_enabled": true,
+
   "vrfs": [
-    { "name": "CUST_A", "rd": "100:110", "rt": "100:1000" },
-    { "name": "CUST_B", "rd": "100:120", "rt": "100:2000" }
+    { "name": "CUST_A" },
+    { "name": "CUST_B" }
   ],
+
   "routers": {
     "P_ROUTERS": [
       {
         "hostname": "P1",
-        "router_id": "10.0.0.2",
-        "loopback0": "10.0.0.2",
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "ip": "10.0.12.2", "mask": "255.255.255.252", "neighbor": "PE1", "mpls": true },
-          { "name": "GigabitEthernet2/0", "ip": "10.0.23.1", "mask": "255.255.255.252", "neighbor": "P2", "mpls": true }
+          { "name": "GigabitEthernet1/0", "neighbor": "PE1", "mpls": true },
+          { "name": "GigabitEthernet2/0", "neighbor": "P2", "mpls": true }
         ]
       },
       {
         "hostname": "P2",
-        "router_id": "10.0.0.3",
-        "loopback0": "10.0.0.3",
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "ip": "10.0.34.1", "mask": "255.255.255.252", "neighbor": "PE2", "mpls": true },
-          { "name": "GigabitEthernet2/0", "ip": "10.0.23.2", "mask": "255.255.255.252", "neighbor": "P1", "mpls": true }
+          { "name": "GigabitEthernet1/0", "neighbor": "PE2", "mpls": true },
+          { "name": "GigabitEthernet2/0", "neighbor": "P1", "mpls": true }
         ]
       }
     ],
+
     "PE_ROUTERS": [
       {
         "hostname": "PE1",
-        "router_id": "10.0.0.1",
-        "loopback0": "10.0.0.1",
-        "ibgp_to": "10.0.0.4",
-        "client_awareness": {
-          "total_clients": 2,
-          "sites": { "CUST_A": 1, "CUST_B": 1 }
-        },
+        "ibgp_to": "PE2",
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "ip": "10.0.12.1", "mask": "255.255.255.252", "mpls": true, "desc": "CORE_P1" },
-          { "name": "FastEthernet0/0", "ip": "192.168.1.1", "mask": "255.255.255.252", "vrf": "CUST_A", "desc": "CE1_SITE1" },
-          { "name": "GigabitEthernet2/0", "ip": "192.168.3.1", "mask": "255.255.255.252", "vrf": "CUST_B", "desc": "CE3_SITE1" }
+          { "name": "GigabitEthernet1/0", "neighbor": "P1", "mpls": true },
+          { "name": "FastEthernet0/0", "vrf": "CUST_A", "connected_to": "CE1" },
+          { "name": "GigabitEthernet2/0", "vrf": "CUST_B", "connected_to": "CE3" }
         ]
       },
       {
         "hostname": "PE2",
-        "router_id": "10.0.0.4",
-        "loopback0": "10.0.0.4",
-        "ibgp_to": "10.0.0.1",
-        "client_awareness": {
-          "total_clients": 2,
-          "sites": { "CUST_A": 1, "CUST_B": 1 }
-        },
+        "ibgp_to": "PE1",
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "ip": "10.0.34.2", "mask": "255.255.255.252", "mpls": true, "desc": "CORE_P2" },
-          { "name": "FastEthernet0/0", "ip": "192.168.2.1", "mask": "255.255.255.252", "vrf": "CUST_A", "desc": "CE2_SITE2" },
-          { "name": "GigabitEthernet2/0", "ip": "192.168.4.1", "mask": "255.255.255.252", "vrf": "CUST_B", "desc": "CE4_SITE2" }
+          { "name": "GigabitEthernet1/0", "neighbor": "P2", "mpls": true },
+          { "name": "FastEthernet0/0", "vrf": "CUST_A", "connected_to": "CE2" },
+          { "name": "GigabitEthernet2/0", "vrf": "CUST_B", "connected_to": "CE4" }
         ]
       }
     ],
+
     "CE_ROUTERS": [
-      { "hostname": "CE1", "router_id": "172.16.0.1", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.1.2/30", "pe": "192.168.1.1" },
-      { "hostname": "CE2", "router_id": "172.16.0.2", "as": 10, "vrf": "CUST_A", "interface": "FastEthernet0/0", "ip": "192.168.2.2/30", "pe": "192.168.2.1" },
-      { "hostname": "CE3", "router_id": "172.16.0.3", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.3.2/30", "pe": "192.168.3.1" },
-      { "hostname": "CE4", "router_id": "172.16.0.4", "as": 20, "vrf": "CUST_B", "interface": "FastEthernet0/0", "ip": "192.168.4.2/30", "pe": "192.168.4.1" }
+      { "hostname": "CE1", "as": 10, "vrf": "CUST_A", "connected_to": "PE1" },
+      { "hostname": "CE2", "as": 10, "vrf": "CUST_A", "connected_to": "PE2" },
+      { "hostname": "CE3", "as": 20, "vrf": "CUST_B", "connected_to": "PE1" },
+      { "hostname": "CE4", "as": 20, "vrf": "CUST_B", "connected_to": "PE2" }
     ]
   }
 }
