@@ -12,16 +12,18 @@
     "P_ROUTERS": [
       {
         "hostname": "P1",
+        "router_num" : 2,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor": "PE1", "mpls": true },
-          { "name": "GigabitEthernet2/0", "neighbor": "P2", "mpls": true }
+          { "name": "GigabitEthernet1/0", "neighbor_num":1, "neighbor": "PE1", "mpls": true },
+          { "name": "GigabitEthernet2/0", "neighbor_num":3, "neighbor": "P2", "mpls": true }
         ]
       },
       {
         "hostname": "P2",
+        "router_num" : 3,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor": "PE2", "mpls": true },
-          { "name": "GigabitEthernet2/0", "neighbor": "P1", "mpls": true }
+          { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "PE2", "mpls": true },
+          { "name": "GigabitEthernet2/0", "neighbor_num":4, "neighbor": "P1", "mpls": true }
         ]
       }
     ],
@@ -30,19 +32,21 @@
       {
         "hostname": "PE1",
         "ibgp_to": "PE2",
+        "router_num" : 1,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor": "P1", "mpls": true },
-          { "name": "FastEthernet0/0", "vrf": "CUST_A", "connected_to": "CE1" },
-          { "name": "GigabitEthernet2/0", "vrf": "CUST_B", "connected_to": "CE3" }
+          { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "P1", "mpls": true },
+          { "name": "FastEthernet0/0", "neighbor_num":1, "vrf": "CUST_A", "connected_to": "CE1" },
+          { "name": "GigabitEthernet2/0", "neighbor_num":3, "vrf": "CUST_B", "connected_to": "CE3" }
         ]
       },
       {
         "hostname": "PE2",
         "ibgp_to": "PE1",
+        "router_num_int" : 4,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor": "P2", "mpls": true },
-          { "name": "FastEthernet0/0", "vrf": "CUST_A", "connected_to": "CE2" },
-          { "name": "GigabitEthernet2/0", "vrf": "CUST_B", "connected_to": "CE4" }
+          { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "P2", "mpls": true },
+          { "name": "FastEthernet0/0", "neighbor_CE_num":2, "vrf": "CUST_A", "connected_to": "CE2" },
+          { "name": "GigabitEthernet2/0", "neighbor_CE_num":4, "vrf": "CUST_B", "connected_to": "CE4" }
         ]
       }
     ],
