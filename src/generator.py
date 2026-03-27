@@ -10,16 +10,16 @@ def get_vrf_details(intent_data, vrf_name):
 def generate_overlay_data(router_config, intent_data):
     """ Prépare les VRF et le voisinage BGP Client (PE-CE). """
     vrfs_config = {}
-    # On récupère l'ID du PE actuel
     my_id = router_config.get("router_num") or router_config.get("router_num_int")
 
     for interface in router_config.get("interfaces", []):
         vrf_name = interface.get("vrf")
         if vrf_name:
             details = get_vrf_details(intent_data, vrf_name)
+            # On cherche l'ID du CE (soit neighbor_num, soit neighbor_CE_num)
             neighbor_num = interface.get("neighbor_num") or interface.get("neighbor_CE_num")
             
-            # Génération de l'IP du PE sur l'interface client (is_pe_ce=True)
+            # Ici on est dans un PE, donc is_ce_context=False (par défaut)
             ip_address = generate_ip(my_id, neighbor_num, is_pe_ce=True)
             
             if vrf_name not in vrfs_config:
@@ -38,34 +38,30 @@ def generate_overlay_data(router_config, intent_data):
                 "desc": interface.get("desc", f"Link to {vrf_name}")
             })
 
-            # Mapping BGP : Trouver le CE qui correspond à ce lien
-            for ce in intent_data["routers"].get("CE_ROUTERS", []):
-                # On lie si le CE est censé être connecté à ce PE
-                if ce.get("connected_to") == router_config["hostname"] and ce.get("vrf") == vrf_name:
-                    # L'IP du CE est la .2 du sous-réseau (via notre logique addressing)
-                    ce_id = ce.get("router_num") or neighbor_num
-                    vrfs_config[vrf_name]["bgp_neighbors"].append({
-                        "ip": f"192.168.{ce_id}.2", 
-                        "remote_as": ce["as"],
-                        "hostname": ce["hostname"]
-                    })
+            # Mapping BGP : On calcule l'IP du voisin (le CE) qui est toujours .2
+            vrfs_config[vrf_name]["bgp_neighbors"].append({
+                "ip": f"192.168.{neighbor_num}.2", 
+                "remote_as": next((ce["as"] for ce in intent_data["routers"]["CE_ROUTERS"] if ce["hostname"] in interface.get("connected_to", "")), "65000"),
+                "hostname": interface.get("connected_to")
+            })
 
     return list(vrfs_config.values())
 
 def generate_ce_data(router_config, intent_data):
     """ Prépare les données pour un routeur Client (CE). """
-    my_id = router_config.get("router_num")
-    # Pour un CE, le neighbor_num est l'ID du PE (ex: 1 pour PE1)
-    pe_neighbor_num = router_config.get("neighbor_num") 
+    # L'ID du CE est souvent déduit du nom ou d'un champ router_num
+    # Pour CE1 -> 1, CE2 -> 2, etc.
+    my_id = router_config.get("router_num") or int(''.join(filter(str.isdigit, router_config["hostname"])))
     
     return {
         "hostname": router_config["hostname"],
         "as_number": router_config["as"],
         "vrf_membership": router_config["vrf"],
         "interface_name": router_config.get("interface", "FastEthernet0/0"),
-        "ip": f"192.168.{my_id}.2", # Le CE est toujours .2
+        # Ici on utilise la logique : CE est .2, PE est .1
+        "ip": generate_ip(my_id, None, is_pe_ce=True, is_ce_context=True),
         "mask": "255.255.255.252",
-        "pe_ip": f"192.168.{my_id}.1", # Le PE est toujours .1
+        "pe_ip": generate_ip(my_id, None, is_pe_ce=True, is_ce_context=False),
         "backbone_as": intent_data["backbone_as"]
     }
 
@@ -75,12 +71,10 @@ def generate_ospf_mpls_data(router_config, intent_data):
     my_id = router_config.get("router_num") or router_config.get("router_num_int")
     
     for intf in router_config.get("interfaces", []):
-        # On ne configure OSPF/MPLS que sur les liens Backbone (sans VRF)
         if "vrf" not in intf:
             neighbor_id = intf.get("neighbor_num")
             ip = generate_ip(my_id, neighbor_id, is_pe_ce=False)
             
-            # Calcul du network ID (ex: 10.0.12.1 -> 10.0.12.0)
             parts = ip.split('.')
             network_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.0"
 
@@ -103,10 +97,9 @@ def generate_ospf_mpls_data(router_config, intent_data):
 def generate_ibgp_data(pe_config, intent_data):
     """ Prépare la session iBGP VPNv4 entre PE. """
     neighbor_info = {}
-    ibgp_target_hostname = pe_config.get("ibgp_to") # ex: "PE2"
+    ibgp_target_hostname = pe_config.get("ibgp_to")
     
     if ibgp_target_hostname:
-        # Trouver l'ID du voisin PE pour calculer sa Loopback
         target_router = next((r for r in intent_data["routers"].get("PE_ROUTERS", [])
                               if r["hostname"] == ibgp_target_hostname), None)
         
@@ -128,40 +121,33 @@ def generate_ibgp_data(pe_config, intent_data):
 
 def generate_router_data(router_hostname, intent_data):
     """ Orchestrateur principal. """
-    # 1. Identifier le rôle et récupérer la config brute
     categories = ["PE_ROUTERS", "P_ROUTERS", "CE_ROUTERS"]
-    raw_config = None
-    role = ""
+    raw_config, role = None, ""
 
     for cat in categories:
-        raw_config = next((r for r in intent_data["routers"].get(cat, []) 
-                           if r["hostname"] == router_hostname), None)
+        raw_config = next((r for r in intent_data["routers"].get(cat, []) if r["hostname"] == router_hostname), None)
         if raw_config:
             role = cat
             break
 
-    if not raw_config:
-        return None
+    if not raw_config: return None
 
-    # 2. Remplir les données communes
     my_id = raw_config.get("router_num") or raw_config.get("router_num_int")
     router_data = {
         "hostname": router_hostname,
         "backbone_as": intent_data.get("backbone_as"),
-        "igp_protocol": intent_data.get("igp"),
-        "loopback_ip": generate_loopback(my_id) if role != "CE_ROUTERS" else None
+        "igp_protocol": intent_data.get("igp")
     }
 
-    # 3. Remplir selon le rôle
     if role == "PE_ROUTERS":
         router_data["role"] = "PE"
-        router_data["interfaces"] = generate_ospf_mpls_data(raw_config, intent_data)["interfaces"]
+        router_data.update(generate_ospf_mpls_data(raw_config, intent_data))
         router_data["vrfs_config"] = generate_overlay_data(raw_config, intent_data)
         router_data["ibgp_data"] = generate_ibgp_data(raw_config, intent_data)
     
     elif role == "P_ROUTERS":
         router_data["role"] = "P"
-        router_data["interfaces"] = generate_ospf_mpls_data(raw_config, intent_data)["interfaces"]
+        router_data.update(generate_ospf_mpls_data(raw_config, intent_data))
 
     elif role == "CE_ROUTERS":
         router_data["role"] = "CE"
