@@ -1,4 +1,4 @@
-from addressing import generate_ip, generate_loopback
+from addressing import generate_ipv4, generate_loopback
 
 def get_vrf_details(intent_data, vrf_name):
     """ Recherche les détails d'une VRF (RD, RT) dans l'intent. """
@@ -20,7 +20,7 @@ def generate_overlay_data(router_config, intent_data):
             neighbor_num = interface.get("neighbor_num") or interface.get("neighbor_CE_num")
             
             # Ici on est dans un PE, donc is_ce_context=False (par défaut)
-            ip_address = generate_ip(my_id, neighbor_num, is_pe_ce=True)
+            ip_address = generate_ipv4(my_id, neighbor_num, is_pe_ce=True)
             
             if vrf_name not in vrfs_config:
                 vrfs_config[vrf_name] = {
@@ -59,9 +59,9 @@ def generate_ce_data(router_config, intent_data):
         "vrf_membership": router_config["vrf"],
         "interface_name": router_config.get("interface", "FastEthernet0/0"),
         # Ici on utilise la logique : CE est .2, PE est .1
-        "ip": generate_ip(my_id, None, is_pe_ce=True, is_ce_context=True),
+        "ip": generate_ipv4(my_id, None, is_pe_ce=True, is_ce_context=True),
         "mask": "255.255.255.252",
-        "pe_ip": generate_ip(my_id, None, is_pe_ce=True, is_ce_context=False),
+        "pe_ip": generate_ipv4(my_id, None, is_pe_ce=True, is_ce_context=False),
         "backbone_as": intent_data["backbone_as"]
     }
 
@@ -73,7 +73,7 @@ def generate_ospf_mpls_data(router_config, intent_data):
     for intf in router_config.get("interfaces", []):
         if "vrf" not in intf:
             neighbor_id = intf.get("neighbor_num")
-            ip = generate_ip(my_id, neighbor_id, is_pe_ce=False)
+            ip = generate_ipv4(my_id, neighbor_id, is_pe_ce=False)
             
             parts = ip.split('.')
             network_ip = f"{parts[0]}.{parts[1]}.{parts[2]}.0"
