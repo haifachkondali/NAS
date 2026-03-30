@@ -1,0 +1,35 @@
+hostname {{ hostname }}
+!
+no ip domain lookup
+!
+mpls label protocol ldp
+mpls ldp router-id Loopback0 force
+!
+interface Loopback0
+ ip address {{ loopback_ip }} 255.255.255.255
+!
+{% for intf in interfaces %}
+interface {{ intf.name }}
+ description link to {{ intf.neighbor }}
+ ip address {{ intf.ip }} {{ intf.mask }}
+{% if ldp_enabled and intf.mpls %}
+ mpls ip
+{% endif %}
+ no shutdown
+!
+{% endfor %}
+router ospf 1
+ router-id {{ router_id }}
+ passive-interface default
+ no passive-interface Loopback0
+{% for intf in interfaces if intf.mpls %}
+ no passive-interface {{ intf.name }}
+{% endfor %}
+ network {{ loopback_ip }} 0.0.0.0 area 0
+{% for intf in interfaces if intf.mpls %}
+ network {{ intf.network_ip }} 0.0.0.3 area 0
+{% endfor %}
+{% if ldp_enabled %}
+ mpls ldp autoconfig
+{% endif %}
+!

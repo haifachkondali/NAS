@@ -21,3 +21,18 @@ def generate_ipv4(my_num, neighbor_num, is_pe_ce=False, is_ce_context=False):
         subnet = f"{ids[0]}{ids[1]}"
         host = "1" if int(my_num) < int(neighbor_num) else "2"
         return f"10.0.{subnet}.{host}"
+
+
+def generate_ip(my_num, neighbor_num, is_pe_ce=False, is_ce_context=False):
+    """Backward-compatible alias used by generator.py."""
+    return generate_ipv4(
+        my_num=my_num,
+        neighbor_num=neighbor_num,
+        is_pe_ce=is_pe_ce,
+        is_ce_context=is_ce_context,
+    )
+
+
+def generate_loopback(router_num):
+    """Generate a deterministic loopback for a router numeric ID."""
+    return f"10.0.0.{int(router_num)}"

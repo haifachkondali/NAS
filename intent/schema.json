@@ -9,7 +9,7 @@
     },
     "igp": {
       "type": "string",
-      "enum": ["OSPF", "ISIS", "RIP", "EIGRP"]
+      "enum": ["OSPF"]
     },
     "ldp_enabled": {
       "type": "boolean"
@@ -19,7 +19,7 @@
       "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["name", "rd", "rt"],
+        "required": ["name"],
         "properties": {
           "name": { "type": "string" },
           "rd": { "type": "string" },
@@ -36,19 +36,19 @@
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["hostname", "loopback0", "interfaces"],
+            "required": ["hostname", "interfaces"],
             "properties": {
               "hostname": { "type": "string" },
-              "loopback0": { "type": "string" },
+              "router_num": { "type": "integer", "minimum": 1 },
+              "router_num_int": { "type": "integer", "minimum": 1 },
               "interfaces": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["name", "ip", "mask", "neighbor", "mpls"],
+                  "required": ["name", "neighbor", "mpls"],
                   "properties": {
                     "name": { "type": "string" },
-                    "ip": { "type": "string" },
-                    "mask": { "type": "string" },
+                    "neighbor_num": { "type": "integer", "minimum": 1 },
                     "neighbor": { "type": "string" },
                     "mpls": { "type": "boolean" }
                   },
@@ -56,79 +56,65 @@
                 }
               }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "anyOf": [
+              { "required": ["router_num"] },
+              { "required": ["router_num_int"] }
+            ]
           }
         },
         "PE_ROUTERS": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": [
-              "hostname",
-              "loopback0",
-              "bgp_rid",
-              "ibgp_to",
-              "client_awareness",
-              "interfaces"
-            ],
+            "required": ["hostname", "ibgp_to", "interfaces"],
             "properties": {
               "hostname": { "type": "string" },
-              "loopback0": { "type": "string" },
-              "bgp_rid": { "type": "string" },
+              "router_num": { "type": "integer", "minimum": 1 },
+              "router_num_int": { "type": "integer", "minimum": 1 },
               "ibgp_to": { "type": "string" },
-              "client_awareness": {
-                "type": "object",
-                "required": ["total_clients", "sites"],
-                "properties": {
-                  "total_clients": {
-                    "type": "integer",
-                    "minimum": 0
-                  },
-                  "sites": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "integer",
-                      "minimum": 0
-                    }
-                  }
-                },
-                "additionalProperties": false
-              },
               "interfaces": {
                 "type": "array",
                 "items": {
                   "type": "object",
-                  "required": ["name", "ip", "mask", "desc"],
+                  "required": ["name"],
                   "properties": {
                     "name": { "type": "string" },
-                    "ip": { "type": "string" },
-                    "mask": { "type": "string" },
+                    "neighbor_num": { "type": "integer", "minimum": 1 },
+                    "neighbor_CE_num": { "type": "integer", "minimum": 1 },
+                    "neighbor": { "type": "string" },
                     "mpls": { "type": "boolean" },
                     "vrf": { "type": "string" },
-                    "desc": { "type": "string" }
+                    "desc": { "type": "string" },
+                    "connected_to": { "type": "string" }
                   },
                   "additionalProperties": false
                 }
               }
             },
-            "additionalProperties": false
+            "additionalProperties": false,
+            "anyOf": [
+              { "required": ["router_num"] },
+              { "required": ["router_num_int"] }
+            ]
           }
         },
         "CE_ROUTERS": {
           "type": "array",
           "items": {
             "type": "object",
-            "required": ["hostname", "as", "vrf", "interface", "ip", "pe"],
+            "required": ["hostname", "as", "vrf", "connected_to"],
             "properties": {
               "hostname": { "type": "string" },
+              "router_num": { "type": "integer", "minimum": 1 },
+              "router_num_int": { "type": "integer", "minimum": 1 },
               "as": {
                 "type": "integer",
                 "minimum": 1
               },
               "vrf": { "type": "string" },
               "interface": { "type": "string" },
-              "ip": { "type": "string" },
-              "pe": { "type": "string" }
+              "connected_to": { "type": "string" }
             },
             "additionalProperties": false
           }

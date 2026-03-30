@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import sys
 
 try:
@@ -56,23 +57,42 @@ def _validate_business_rules(intent_data):
     pe_routers = routers.get("PE_ROUTERS", [])
     ce_routers = routers.get("CE_ROUTERS", [])
 
-    all_router_names = {r["hostname"] for r in (p_routers + pe_routers + ce_routers)}
-    pe_router_ids = {pe["router_id"] for pe in pe_routers}
+    all_routers = p_routers + pe_routers + ce_routers
+    all_router_names = [r["hostname"] for r in all_routers]
+    pe_router_names = {pe["hostname"] for pe in pe_routers}
+    ce_router_names = {ce["hostname"] for ce in ce_routers}
+
+    def _router_num(router):
+        value = router.get("router_num")
+        if value is not None:
+            return int(value)
+
+        value = router.get("router_num_int")
+        if value is not None:
+            return int(value)
+
+        match = re.search(r"(\d+)$", router.get("hostname", ""))
+        if not match:
+            raise ValueError(
+                f"Router '{router.get('hostname', 'UNKNOWN')}' must define router_num/router_num_int or end hostname with digits"
+            )
+        return int(match.group(1))
 
     # Check unique hostnames
-    if len(all_router_names) != len(p_routers) + len(pe_routers) + len(ce_routers):
+    if len(set(all_router_names)) != len(all_router_names):
         raise ValueError("Duplicate router hostname detected")
 
-    # Check unique router IDs
-    all_router_ids = [r["router_id"] for r in (p_routers + pe_routers + ce_routers)]
-    if len(all_router_ids) != len(set(all_router_ids)):
-        raise ValueError("Duplicate router_id detected")
+    # Check unique router IDs in the provider core only (P + PE).
+    # CE IDs may intentionally overlap with PE/P numbering in this model.
+    core_router_ids = [_router_num(r) for r in (p_routers + pe_routers)]
+    if len(core_router_ids) != len(set(core_router_ids)):
+        raise ValueError("Duplicate numeric router id detected in core routers (P/PE)")
 
     # Check P routers
     for router in p_routers:
         for interface in router.get("interfaces", []):
             neighbor = interface.get("neighbor")
-            if neighbor and neighbor not in all_router_names:
+            if neighbor and neighbor not in set(all_router_names):
                 raise ValueError(
                     f"P router '{router['hostname']}' has unknown neighbor '{neighbor}'"
                 )
@@ -80,21 +100,11 @@ def _validate_business_rules(intent_data):
     # Check PE routers
     for router in pe_routers:
         ibgp_to = router.get("ibgp_to")
-        if ibgp_to and ibgp_to not in pe_router_ids:
+        if ibgp_to and ibgp_to not in pe_router_names:
             raise ValueError(
                 f"PE router '{router['hostname']}' has ibgp_to='{ibgp_to}' "
-                f"which does not match any PE router_id"
+                f"which does not match any PE hostname"
             )
-
-        client_awareness = router.get("client_awareness", {})
-        sites = client_awareness.get("sites", {})
-
-        for vrf_name in sites.keys():
-            if vrf_name not in vrf_names:
-                raise ValueError(
-                    f"PE router '{router['hostname']}' references unknown VRF "
-                    f"in client_awareness.sites: '{vrf_name}'"
-                )
 
         for interface in router.get("interfaces", []):
             vrf = interface.get("vrf")
@@ -104,6 +114,36 @@ def _validate_business_rules(intent_data):
                     f"using unknown VRF '{vrf}'"
                 )
 
+            # Core PE links must reference known backbone routers.
+            neighbor = interface.get("neighbor")
+            if not vrf and neighbor and neighbor not in set(all_router_names):
+                raise ValueError(
+                    f"PE router '{router['hostname']}' has unknown core neighbor '{neighbor}'"
+                )
+
+            # Access PE-CE links must reference known CE routers.
+            connected_to = interface.get("connected_to")
+            if vrf:
+                if not connected_to:
+                    raise ValueError(
+                        f"PE router '{router['hostname']}' interface '{interface['name']}' in VRF '{vrf}' must define connected_to"
+                    )
+                if connected_to not in ce_router_names:
+                    raise ValueError(
+                        f"PE router '{router['hostname']}' references unknown CE '{connected_to}'"
+                    )
+
+                ce = next(c for c in ce_routers if c["hostname"] == connected_to)
+                if ce.get("vrf") != vrf:
+                    raise ValueError(
+                        f"PE router '{router['hostname']}' interface '{interface['name']}' VRF '{vrf}' mismatches CE '{connected_to}' VRF '{ce.get('vrf')}'"
+                    )
+
+                if ce.get("connected_to") != router["hostname"]:
+                    raise ValueError(
+                        f"CE router '{connected_to}' must connect back to PE '{router['hostname']}'"
+                    )
+
     # Check CE routers
     for router in ce_routers:
         vrf = router.get("vrf")
@@ -112,17 +152,9 @@ def _validate_business_rules(intent_data):
                 f"CE router '{router['hostname']}' references unknown VRF '{vrf}'"
             )
 
-    # Check total_clients consistency on each PE
-    for router in pe_routers:
-        client_awareness = router.get("client_awareness", {})
-        total_clients = client_awareness.get("total_clients")
-        sites = client_awareness.get("sites", {})
-        computed_total = sum(sites.values())
-
-        if total_clients != computed_total:
+        if router.get("connected_to") not in pe_router_names:
             raise ValueError(
-                f"PE router '{router['hostname']}': total_clients={total_clients} "
-                f"but sum(sites)={computed_total}"
+                f"CE router '{router['hostname']}' references unknown PE '{router.get('connected_to')}'"
             )
 
 

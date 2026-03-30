@@ -1,13 +1,11 @@
 from generator import load_intent, generate_router_data
-from remote_deploy import deploy_parallel
 from validate import validate_intent
 from jinja2 import Environment, FileSystemLoader, TemplateNotFound
 import argparse
 import os
 import sys
-import json
 
-intent_data = json.load(open("intent/network.json"))
+
 def print_help():
     print("Usage: python main.py [--file <intent_file>] [--output <output_folder>] [--deploy]")
     print("\nOptions:")
@@ -28,34 +26,23 @@ def render_router_config(env, router_data, igp, ldp_enabled=False):
         - all template variables needed by Jinja
     """
 
-    parts = []
     router_type = router_data.get("router_type", "").upper()
+    template_map = {
+        "P": "router_p.j2",
+        "PE": "router_pe.j2",
+        "CE": "router_ce.j2",
+    }
 
-    # IGP for core routers only
-    if router_type in {"P", "PE"}:
-        try:
-            igp_template = env.get_template(f"router_{igp.lower()}.j2")
-            parts.append(igp_template.render(**router_data))
-        except TemplateNotFound:
-            raise FileNotFoundError(f"Template not found: router_{igp.lower()}.j2")
+    template_name = template_map.get(router_type)
+    if not template_name:
+        raise ValueError(f"Unsupported router type: '{router_type}'")
 
-    # Optional MPLS/LDP template for P / PE
-    if ldp_enabled and router_type in {"P", "PE"}:
-        try:
-            mpls_template = env.get_template("router_mpls.j2")
-            parts.append(mpls_template.render(**router_data))
-        except TemplateNotFound:
-            pass
+    try:
+        template = env.get_template(template_name)
+    except TemplateNotFound:
+        raise FileNotFoundError(f"Template not found: {template_name}")
 
-    # BGP for PE / CE
-    if router_type in {"PE", "CE"}:
-        try:
-            bgp_template = env.get_template("router_bgp.j2")
-            parts.append(bgp_template.render(**router_data))
-        except TemplateNotFound:
-            raise FileNotFoundError("Template not found: router_bgp.j2")
-
-    return "\n\n".join(part for part in parts if part.strip())
+    return template.render(**router_data, igp=igp, ldp_enabled=ldp_enabled)
 
 
 def main(intent_file, output_folder, deploy=False):
@@ -64,17 +51,13 @@ def main(intent_file, output_folder, deploy=False):
     igp = intent.get("igp", "").strip()
     ldp_enabled = intent.get("ldp_enabled", False)
 
-    if igp.lower() not in {"ospf", "rip"}:
-        print(f"Unsupported IGP '{igp}'. Only OSPF and RIP are currently supported.")
+    if igp.lower() != "ospf":
+        print(f"Unsupported IGP '{igp}'. Only OSPF is currently supported.")
         sys.exit(1)
 
     env = Environment(loader=FileSystemLoader("templates"))
 
-    try:
-        router_data_list = generate_router_data(intent)
-    except TypeError:
-        print("[ERROR] generate_router_data() must now accept the new full intent format.")
-        sys.exit(1)
+    router_data_list = generate_router_data(intent)
 
     if not isinstance(router_data_list, list):
         print("[ERROR] generate_router_data(intent) must return a list of router data dictionaries.")
@@ -107,11 +90,13 @@ def main(intent_file, output_folder, deploy=False):
             deploy_list.append({
                 "hostname": hostname,
                 "port": router_data["console_port"],
-                "as_number": router_data.get("asn"),
+                "as_number": router_data.get("as_number"),
                 "config_file_path": output_path
             })
 
     if deploy and deploy_list:
+        from remote_deploy import deploy_parallel
+
         print(f"Starting parallel deployment for {len(deploy_list)} routers...")
         deploy_parallel(deploy_list, max_workers=8)
 

@@ -36,7 +36,7 @@ def find_router_mapping(project_dir):
             if match:
                 config_path = os.path.join(configs_dir, config_file)
                 with open(config_path, "r", encoding="utf-8", errors="ignore") as f:
-                    hostname_match = re.search(r"hostname\s+(\w+)", f.read())
+                    hostname_match = re.search(r"hostname\s+([A-Za-z0-9_-]+)", f.read())
                     if hostname_match:
                         mapping[hostname_match.group(1)] = (uuid_folder, f"i{match.group(1)}")
     
@@ -152,7 +152,7 @@ def deploy_configs(source_dir, target_dir, create_backup=True):
     dynamips_dir = os.path.join(project_root, "project-files", "dynamips")
     
     for filename in os.listdir(source_dir):
-        match = re.match(r"([Rr]\d+)(?:_config)?\.cfg", filename)
+        match = re.match(r"([A-Za-z][A-Za-z0-9_-]*)(?:_config)?\.cfg$", filename)
         if not match or match.group(1) not in router_mapping:
             continue
         
