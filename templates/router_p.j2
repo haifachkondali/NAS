@@ -1,9 +1,11 @@
 hostname {{ hostname }}
+conf t
+!
+ip cef
+!
 !
 no ip domain lookup
-!
-mpls label protocol ldp
-mpls ldp router-id Loopback0 force
+no ipv6 cef
 !
 interface Loopback0
  ip address {{ loopback_ip }} 255.255.255.255
@@ -12,6 +14,7 @@ interface Loopback0
 interface {{ intf.name }}
  description link to {{ intf.neighbor }}
  ip address {{ intf.ip }} {{ intf.mask }}
+ negotiation auto
 {% if ldp_enabled and intf.mpls %}
  mpls ip
 {% endif %}
@@ -20,11 +23,6 @@ interface {{ intf.name }}
 {% endfor %}
 router ospf 1
  router-id {{ router_id }}
- passive-interface default
- no passive-interface Loopback0
-{% for intf in interfaces if intf.mpls %}
- no passive-interface {{ intf.name }}
-{% endfor %}
  network {{ loopback_ip }} 0.0.0.0 area 0
 {% for intf in interfaces if intf.mpls %}
  network {{ intf.network_ip }} 0.0.0.3 area 0
@@ -33,3 +31,5 @@ router ospf 1
  mpls ldp autoconfig
 {% endif %}
 !
+end
+wr

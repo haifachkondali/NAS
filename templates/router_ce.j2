@@ -1,12 +1,11 @@
 hostname {{ hostname }}
+conf t
 !
 ip cef
 !
 interface {{ interface_name }}
  ip address {{ ip }} {{ mask }}
  no shutdown
- duplex auto
- speed auto
  media-type rj45
 !
 router bgp {{ as_number }}

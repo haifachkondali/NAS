@@ -36,8 +36,15 @@ def _vrf_defaults(intent_data):
     return defaults
 
 
-def _core_interface_data(my_num, intf):
-    neighbor_num = intf.get("neighbor_num")
+def _core_interface_data(my_num, intf, routers_by_hostname):
+    neighbor_num = None
+    neighbor_name = intf.get("neighbor")
+
+    if neighbor_name and neighbor_name in routers_by_hostname:
+        neighbor_num = _router_num(routers_by_hostname[neighbor_name])
+    else:
+        neighbor_num = intf.get("neighbor_num")
+
     if neighbor_num is None:
         raise ValueError(f"Interface '{intf.get('name', 'UNKNOWN')}' is missing neighbor_num")
 
@@ -55,13 +62,13 @@ def _core_interface_data(my_num, intf):
     }
 
 
-def _generate_p_data(router_cfg):
+def _generate_p_data(router_cfg, routers_by_hostname):
     my_num = _router_num(router_cfg)
     interfaces = []
     for intf in router_cfg.get("interfaces", []):
         if "vrf" in intf:
             continue
-        interfaces.append(_core_interface_data(my_num, intf))
+        interfaces.append(_core_interface_data(my_num, intf, routers_by_hostname))
 
     return {
         "hostname": router_cfg["hostname"],
@@ -72,14 +79,14 @@ def _generate_p_data(router_cfg):
     }
 
 
-def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_by_hostname):
+def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_by_hostname, routers_by_hostname):
     my_num = _router_num(router_cfg)
     backbone_interfaces = []
     vrf_map = {}
 
     for intf in router_cfg.get("interfaces", []):
         if "vrf" not in intf:
-            backbone_interfaces.append(_core_interface_data(my_num, intf))
+            backbone_interfaces.append(_core_interface_data(my_num, intf, routers_by_hostname))
             continue
 
         vrf_name = intf["vrf"]
@@ -176,14 +183,15 @@ def generate_router_data(intent_data):
 
     ce_by_hostname = {r["hostname"]: r for r in ce_routers}
     pe_by_hostname = {r["hostname"]: r for r in pe_routers}
+    routers_by_hostname = {r["hostname"]: r for r in (p_routers + pe_routers + ce_routers)}
     vrf_defaults = _vrf_defaults(intent_data)
 
     data = []
     for router in p_routers:
-        data.append(_generate_p_data(router))
+        data.append(_generate_p_data(router, routers_by_hostname))
 
     for router in pe_routers:
-        data.append(_generate_pe_data(router, intent_data, ce_by_hostname, vrf_defaults, pe_by_hostname))
+        data.append(_generate_pe_data(router, intent_data, ce_by_hostname, vrf_defaults, pe_by_hostname, routers_by_hostname))
 
     for router in ce_routers:
         data.append(_generate_ce_data(router, intent_data, pe_by_hostname))
