@@ -1,6 +1,11 @@
+enable
+conf t
+
 hostname {{ hostname }}
-!
 ip cef
+
+!
+! ===== VRF =====
 !
 {% for vrf in vrfs_config %}
 vrf definition {{ vrf.name }}
@@ -10,48 +15,39 @@ vrf definition {{ vrf.name }}
  !
  address-family ipv4
  exit-address-family
-!
+
 {% endfor %}
-ip cef
+!
+! ===== Interfaces =====
 !
 interface Loopback0
  ip address {{ loopback_ip }} 255.255.255.255
-!
-{# --- INTERFACES VERS LE COEUR (BACKBONE) --- #}
+
 {% for intf in interfaces %}
 interface {{ intf.name }}
  description link to {{ intf.neighbor }}
  ip address {{ intf.ip }} {{ intf.mask }}
- duplex auto
- speed auto
- media-type rj45
+ no shutdown
  {% if ldp_enabled and intf.mpls %}
  mpls ip
  {% endif %}
- no shutdown
-!
+
 {% endfor %}
-{# --- INTERFACES VERS LES CLIENTS (VRF) --- #}
 {% for vrf in vrfs_config %}
  {% for access in vrf.interfaces %}
 interface {{ access.name }}
+ description {{ access.desc }}
  vrf forwarding {{ vrf.name }}
  ip address {{ access.ip }} 255.255.255.0
- duplex auto
- speed auto
- media-type rj45
  no shutdown
-!
+
  {% endfor %}
 {% endfor %}
 !
+! ===== OSPF core only =====
+!
 router ospf 1
  router-id {{ router_id }}
- passive-interface default
- no passive-interface Loopback0
-{% for intf in interfaces if intf.mpls %}
- no passive-interface {{ intf.name }}
-{% endfor %}
  network {{ loopback_ip }} 0.0.0.0 area 0
 {% for intf in interfaces if intf.mpls %}
  network {{ intf.network_ip }} 0.0.0.3 area 0
@@ -59,21 +55,29 @@ router ospf 1
 {% if ldp_enabled %}
  mpls ldp autoconfig
 {% endif %}
+
+!
+! ===== BGP =====
 !
 router bgp {{ backbone_as }}
  bgp log-neighbor-changes
- bgp router-id {{ router_id }}
 {% if neighbor and neighbor.ip %}
  neighbor {{ neighbor.ip }} remote-as {{ backbone_as }}
  neighbor {{ neighbor.ip }} update-source Loopback0
+
+ !
+ ! --- MP-BGP vpnv4 entre {{ hostname }} et {{ neighbor.hostname }}
  !
  address-family vpnv4
   neighbor {{ neighbor.ip }} activate
   neighbor {{ neighbor.ip }} send-community both
  exit-address-family
 {% endif %}
- !
 {% for vrf in vrfs_config %}
+
+ !
+ ! --- eBGP {{ hostname }} <-> CE dans VRF {{ vrf.name }}
+ !
  address-family ipv4 vrf {{ vrf.name }}
   {% for ce in vrf.bgp_neighbors %}
   neighbor {{ ce.ip }} remote-as {{ ce.remote_as }}
@@ -81,5 +85,6 @@ router bgp {{ backbone_as }}
   {% endfor %}
  exit-address-family
 {% endfor %}
-!
+
 end
+wr

@@ -1,26 +1,28 @@
-hostname {{ hostname }}
+enable
 conf t
-!
+
+hostname {{ hostname }}
 ip cef
+
 !
-!
-no ip domain lookup
-no ipv6 cef
+! ===== Interfaces =====
 !
 interface Loopback0
  ip address {{ loopback_ip }} 255.255.255.255
-!
+
 {% for intf in interfaces %}
 interface {{ intf.name }}
  description link to {{ intf.neighbor }}
  ip address {{ intf.ip }} {{ intf.mask }}
- negotiation auto
-{% if ldp_enabled and intf.mpls %}
- mpls ip
-{% endif %}
  no shutdown
-!
+ {% if ldp_enabled and intf.mpls %}
+ mpls ip
+ {% endif %}
+
 {% endfor %}
+!
+! ===== OSPF core =====
+!
 router ospf 1
  router-id {{ router_id }}
  network {{ loopback_ip }} 0.0.0.0 area 0
@@ -30,6 +32,6 @@ router ospf 1
 {% if ldp_enabled %}
  mpls ldp autoconfig
 {% endif %}
-!
+
 end
 wr

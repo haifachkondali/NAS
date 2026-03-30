@@ -1,16 +1,18 @@
-hostname {{ hostname }}
+enable
 conf t
-!
+
+hostname {{ hostname }}
 ip cef
-!
+
 interface {{ interface_name }}
- ip address {{ ip }} {{ mask }}
+ description link to PE
+ ip address {{ ip }} 255.255.255.0
  no shutdown
- media-type rj45
-!
+
 router bgp {{ as_number }}
  bgp log-neighbor-changes
  redistribute connected
  neighbor {{ pe_ip }} remote-as {{ backbone_as }}
- !
+
 end
+wr
