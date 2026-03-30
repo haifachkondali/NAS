@@ -21,3 +21,6 @@ def generate_ipv4(my_num, neighbor_num, is_pe_ce=False, is_ce_context=False):
         subnet = f"{ids[0]}{ids[1]}"
         host = "1" if int(my_num) < int(neighbor_num) else "2"
         return f"10.0.{subnet}.{host}"
+
+def generate_loopback(my_id):
+    return f"10.0.0.{my_id}"
