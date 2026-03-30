@@ -1,15 +1,17 @@
 hostname {{ hostname }}
 !
+ip cef
+!
 interface {{ interface_name }}
  ip address {{ ip }} {{ mask }}
  no shutdown
+ duplex auto
+ speed auto
+ media-type rj45
 !
 router bgp {{ as_number }}
- bgp router-id {{ ip }}
+ bgp log-neighbor-changes
+ redistribute connected
  neighbor {{ pe_ip }} remote-as {{ backbone_as }}
  !
- address-family ipv4 unicast
-  neighbor {{ pe_ip }} activate
-  redistribute connected
- exit-address-family
-!
+end
