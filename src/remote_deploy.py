@@ -13,7 +13,7 @@ def deploy_to_router(router_info, reset=True):
 
     device = {
         'device_type': 'cisco_ios_telnet',
-        'host': '127.0.0.1',
+        'host': '10.255.255.254', # A modifier selon votre cas
         'port': port,
         'fast_cli': False,
     }

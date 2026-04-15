@@ -41,6 +41,8 @@
               "hostname": { "type": "string" },
               "router_num": { "type": "integer", "minimum": 1 },
               "router_num_int": { "type": "integer", "minimum": 1 },
+              "port": { "type": "integer" },
+              "config_file_path": { "type": "string" },
               "interfaces": {
                 "type": "array",
                 "items": {
@@ -72,6 +74,8 @@
               "hostname": { "type": "string" },
               "router_num": { "type": "integer", "minimum": 1 },
               "router_num_int": { "type": "integer", "minimum": 1 },
+              "port": { "type": "integer" },
+              "config_file_path": { "type": "string" },
               "ibgp_to": { "type": "string" },
               "interfaces": {
                 "type": "array",
@@ -108,6 +112,8 @@
               "hostname": { "type": "string" },
               "router_num": { "type": "integer", "minimum": 1 },
               "router_num_int": { "type": "integer", "minimum": 1 },
+              "port": { "type": "integer" },
+              "config_file_path": { "type": "string" },
               "as": {
                 "type": "integer",
                 "minimum": 1

@@ -152,7 +152,7 @@ def deploy_configs(source_dir, target_dir, create_backup=True):
     dynamips_dir = os.path.join(project_root, "project-files", "dynamips")
     
     for filename in os.listdir(source_dir):
-        match = re.match(r"([A-Za-z][A-Za-z0-9_-]*)(?:_config)?\.cfg$", filename)
+        match = re.match(r"([A-Za-z][A-Za-z0-9_-]*?)(?:_config)?\.cfg$", filename)
         if not match or match.group(1) not in router_mapping:
             continue
         

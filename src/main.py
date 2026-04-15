@@ -22,7 +22,7 @@ def render_router_config(env, router_data, igp, ldp_enabled=False):
     Expected router_data fields:
         - hostname
         - router_type: "P", "PE", or "CE"
-        - optional console_port
+        - optional port
         - all template variables needed by Jinja
     """
 
@@ -67,9 +67,9 @@ def main(intent_file, output_folder, deploy=False):
 
     for router_data in router_data_list:
         hostname = router_data.get("hostname", "UNKNOWN")
-        console_port = router_data.get("console_port", "N/A")
+        port = router_data.get("port", "N/A")
 
-        print(f"Generating config for router {hostname}..., port: {console_port}")
+        print(f"Generating config for router {hostname}..., port: {port}")
 
         try:
             full_config = render_router_config(
@@ -86,10 +86,10 @@ def main(intent_file, output_folder, deploy=False):
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(full_config)
 
-        if deploy and "console_port" in router_data:
+        if deploy and "port" in router_data:
             deploy_list.append({
                 "hostname": hostname,
-                "port": router_data["console_port"],
+                "port": router_data["port"],
                 "as_number": router_data.get("as_number"),
                 "config_file_path": output_path
             })

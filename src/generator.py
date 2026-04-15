@@ -73,6 +73,7 @@ def _generate_p_data(router_cfg, routers_by_hostname):
     return {
         "hostname": router_cfg["hostname"],
         "router_type": "P",
+        "port": router_cfg["port"],
         "loopback_ip": generate_loopback(my_num),
         "router_id": generate_loopback(my_num),
         "interfaces": interfaces,
@@ -146,6 +147,7 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
     return {
         "hostname": router_cfg["hostname"],
         "router_type": "PE",
+        "port": router_cfg["port"],
         "loopback_ip": generate_loopback(my_num),
         "router_id": generate_loopback(my_num),
         "interfaces": backbone_interfaces,
@@ -165,6 +167,7 @@ def _generate_ce_data(router_cfg, intent_data, pe_by_hostname):
     return {
         "hostname": router_cfg["hostname"],
         "router_type": "CE",
+        "port": router_cfg["port"],
         "as_number": int(router_cfg["as"]),
         "vrf_membership": router_cfg["vrf"],
         "interface_name": router_cfg.get("interface", "FastEthernet0/0"),
