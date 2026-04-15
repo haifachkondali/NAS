@@ -1,8 +1,3 @@
-pour lancer le projet:
-1- changer l'adresse ip de votre os si necessaire dans fichier ...
-2- geenration de la config : python3 src/main.py --file network.json
-3- deploiement sans drag and drop : python3 utils/deploy.py "/chemin/de/votre/fichier/gns" --source-dir output
-
 # GNS3 Network Config Generator
 
 Générateur automatique de configurations réseau pour routeurs Cisco dans GNS3 (OSPF, BGP, MPLS, LDP, VRFs).
