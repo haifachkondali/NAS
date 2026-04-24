@@ -1,6 +1,3 @@
-enable
-conf t
-
 hostname {{ hostname }}
 ip cef
 
@@ -32,6 +29,3 @@ router ospf 1
 {% if ldp_enabled %}
  mpls ldp autoconfig
 {% endif %}
-
-end
-wr
