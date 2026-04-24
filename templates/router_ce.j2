@@ -1,6 +1,3 @@
-enable
-conf t
-
 hostname {{ hostname }}
 ip cef
 
@@ -13,6 +10,3 @@ router bgp {{ as_number }}
  bgp log-neighbor-changes
  redistribute connected
  neighbor {{ pe_ip }} remote-as {{ backbone_as }}
-
-end
-wr
