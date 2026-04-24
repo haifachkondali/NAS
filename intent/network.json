@@ -1,5 +1,5 @@
 {
-  "backbone_as": 100,
+  "backbone_as": 65100,
   "igp": "OSPF",
   "ldp_enabled": true,
 
@@ -60,10 +60,10 @@
     ],
 
     "CE_ROUTERS": [
-      { "hostname": "CE1", "config_file_path":"CE1.cfg", "port":5024, "as": 10, "vrf": "CUST_A", "connected_to": "PE1" },
-      { "hostname": "CE2", "config_file_path":"CE2.cfg", "port":5026, "as": 10, "vrf": "CUST_A", "connected_to": "PE2" },
-      { "hostname": "CE3", "config_file_path":"CE3.cfg", "port":5025, "as": 20, "vrf": "CUST_B", "connected_to": "PE1" },
-      { "hostname": "CE4", "config_file_path":"CE4.cfg", "port":5027, "as": 20, "vrf": "CUST_B", "connected_to": "PE2" }
+      { "hostname": "CE1", "config_file_path":"CE1.cfg", "port":5024, "as": 65001, "vrf": "CUST_A", "connected_to": "PE1" },
+      { "hostname": "CE2", "config_file_path":"CE2.cfg", "port":5026, "as": 65002, "vrf": "CUST_A", "connected_to": "PE2" },
+      { "hostname": "CE3", "config_file_path":"CE3.cfg", "port":5025, "as": 65003, "vrf": "CUST_B", "connected_to": "PE1" },
+      { "hostname": "CE4", "config_file_path":"CE4.cfg", "port":5027, "as": 65004, "vrf": "CUST_B", "connected_to": "PE2" }
     ]
   }
 }
