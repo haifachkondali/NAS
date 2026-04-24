@@ -57,7 +57,7 @@ Les fichiers sont générés dans output/ : PE1_config.cfg, P1_config.cfg, CE1_c
 
 ## 5. Déploiement - Deux méthodes
 
-### Méthode 1 : Glisser-déposer (Windows uniquement)
+### Méthode 1 : Drag & drop (Windows uniquement)
 
 #### 1. Sur Windows, créez un dossier gns3_deploy et copiez ces fichiers :
 
@@ -67,7 +67,7 @@ Les fichiers sont générés dans output/ : PE1_config.cfg, P1_config.cfg, CE1_c
 
 <code>deploy.py</code>
 
-#### 2. Glissez-déposez votre dossier projet GNS3 sur <code>deploy_dragdrop.bat</code>
+#### 2. Drag and drop votre dossier projet GNS3 sur <code>deploy_dragdrop.bat</code>
 
 Le script copie automatiquement les configurations au bon endroit.
 
@@ -77,17 +77,17 @@ Le script copie automatiquement les configurations au bon endroit.
 Sous Windows :
 
 ```bash
-python3 deploy.py "C:\Users\votre_user\GNS3\projects\mon_projet" --source-dir output
+python3 utils/deploy.py "C:\Users\votre_user\GNS3\projects\mon_projet" --source-dir output
 ```
 Sous WSL (Linux sur Windows) :
 
 ```bash
-python3 deploy.py "/mnt/c/Users/votre_user/GNS3/projects/NAS_Project/mon_projet" --source-dir output
+python3 utils/deploy.py "/mnt/c/Users/votre_user/GNS3/projects/NAS_Project/mon_projet" --source-dir output
 ```
 Sous Linux natif :
 
 ```bash
-python3 deploy.py "/home/votre_user/GNS3/projects/mon_projet" --source-dir output
+python3 utils/deploy.py "/home/votre_user/GNS3/projects/mon_projet" --source-dir output
 ```
 
 Puis redémarrez les routeurs dans GNS3.
