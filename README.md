@@ -82,7 +82,7 @@ python3 deploy.py "C:\Users\votre_user\GNS3\projects\mon_projet" --source-dir ou
 Sous WSL (Linux sur Windows) :
 
 ```bash
-python3 deploy.py "/mnt/c/Users/votre_user/GNS3/projects/mon_projet" --source-dir output
+python3 deploy.py "/mnt/c/Users/votre_user/GNS3/projects/NAS_Project/mon_projet" --source-dir output
 ```
 Sous Linux natif :
 
