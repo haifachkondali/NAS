@@ -10,7 +10,6 @@ except ImportError:
     print("Please install it with: pip install jsonschema")
     sys.exit(1)
 
-from addressing import extract_router_num
 
 
 def validate_intent(intent_path="intent/network.json", schema_path="intent/schema.json"):
@@ -83,11 +82,6 @@ def _validate_business_rules(intent_data):
         raise ValueError("Duplicate router hostname detected")
 
     # Check unique router IDs in the provider core only (P + PE).
-    # CE IDs may intentionally overlap with PE/P numbering in this model.
-    core_router_ids = [extract_router_num(r) for r in (p_routers + pe_routers)]
-    if len(core_router_ids) != len(set(core_router_ids)):
-        raise ValueError("Duplicate numeric router id detected in core routers (P/PE)")
-
     # Check P routers
     for router in p_routers:
         for interface in router.get("interfaces", []):

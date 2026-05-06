@@ -31,8 +31,8 @@
         "port":5020,
         "router_num" : 3,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "PE2", "mpls": true },
-          { "name": "GigabitEthernet2/0", "neighbor_num":4, "neighbor": "P1", "mpls": true }
+          { "name": "GigabitEthernet1/0", "neighbor_num":4, "neighbor": "PE2", "mpls": true },
+          { "name": "GigabitEthernet2/0", "neighbor_num":2, "neighbor": "P1", "mpls": true }
         ]
       }
     ],
@@ -55,18 +55,18 @@
         "ibgp_to": "PE1",
         "router_num" : 4,
         "interfaces": [
-          { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "P2", "mpls": true },
-          { "name": "FastEthernet0/0", "neighbor_CE_num":2, "vrf": "CUST_A", "connected_to": "CE2" },
-          { "name": "GigabitEthernet2/0", "neighbor_CE_num":4, "vrf": "CUST_B", "connected_to": "CE4" }
+          { "name": "GigabitEthernet1/0", "neighbor_num":3, "neighbor": "P2", "mpls": true },
+          { "name": "FastEthernet0/0", "neighbor_num":2, "vrf": "CUST_A", "connected_to": "CE2" },
+          { "name": "GigabitEthernet2/0", "neighbor_num":4, "vrf": "CUST_B", "connected_to": "CE4" }
         ]
       }
     ],
 
     "CE_ROUTERS": [
-      { "hostname": "CE1", "port":5024, "as": 10, "vrf": "CUST_A", "connected_to": "PE1" },
-      { "hostname": "CE2", "port":5026, "as": 11, "vrf": "CUST_A", "connected_to": "PE2" },
-      { "hostname": "CE3", "port":5025, "as": 20, "vrf": "CUST_B", "connected_to": "PE1" },
-      { "hostname": "CE4", "port":5027, "as": 21, "vrf": "CUST_B", "connected_to": "PE2" }
+      { "hostname": "CE1", "router_num":1, "port":5024, "as": 10, "vrf": "CUST_A", "connected_to": "PE1" },
+      { "hostname": "CE2", "router_num":2, "port":5026, "as": 11, "vrf": "CUST_A", "connected_to": "PE2" },
+      { "hostname": "CE3", "router_num":3, "port":5025, "as": 20, "vrf": "CUST_B", "connected_to": "PE1" },
+      { "hostname": "CE4", "router_num":4, "port":5027, "as": 21, "vrf": "CUST_B", "connected_to": "PE2" }
     ]
   }
 }

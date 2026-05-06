@@ -34,39 +34,6 @@ def generate_ipv4(my_num, neighbor_num, base_prefix, is_pe_ce=False, is_ce_conte
         return f"{base_prefix}.{subnet}.{host}"
 
 
-def extract_router_num(router):
-    """
-    Extract numeric router ID from router config object.
-    
-    Args:
-        router (dict): Router configuration with hostname and optional router_num fields
-        
-    Returns:
-        int: Numeric router ID
-        
-    Raises:
-        ValueError: If router ID cannot be determined
-    """
-    import re
-    
-    # Try explicit router_num field
-    value = router.get("router_num")
-    if value is not None:
-        return int(value)
-    
-    # Try alternate field name
-    value = router.get("router_num_int")
-    if value is not None:
-        return int(value)
-    
-    # Extract from hostname (e.g., "P1" -> 1, "PE2" -> 2)
-    match = re.search(r"(\d+)$", router.get("hostname", ""))
-    if not match:
-        raise ValueError(
-            f"Router '{router.get('hostname', 'UNKNOWN')}' must define router_num/router_num_int or end hostname with digits"
-        )
-    return int(match.group(1))
-
 
 def generate_loopback(router_num):
     """Generate a deterministic loopback for a router numeric ID."""
