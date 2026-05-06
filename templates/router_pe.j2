@@ -12,7 +12,6 @@ vrf definition {{ vrf.name }}
  !
  address-family ipv4
  exit-address-family
-
 {% endfor %}
 !
 ! ===== Interfaces =====
@@ -28,16 +27,14 @@ interface {{ intf.name }}
  {% if ldp_enabled and intf.mpls %}
  mpls ip
  {% endif %}
-
 {% endfor %}
 {% for vrf in vrfs_config %}
  {% for access in vrf.interfaces %}
 interface {{ access.name }}
  description {{ access.desc }}
  vrf forwarding {{ vrf.name }}
- ip address {{ access.ip }} 255.255.255.0
+ ip address {{ access.ip }} {{ access.mask }}
  no shutdown
-
  {% endfor %}
 {% endfor %}
 !

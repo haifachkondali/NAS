@@ -3,7 +3,7 @@ ip cef
 
 interface {{ interface_name }}
  description link to PE
- ip address {{ ip }} 255.255.255.0
+ ip address {{ ip }} {{ mask }}
  no shutdown
 
 router bgp {{ as_number }}

@@ -1,27 +1,21 @@
 import json
 import re
 
-from addressing import generate_ip, generate_loopback
+from addressing import generate_ipv4, generate_loopback, extract_router_num
 
 
 def load_intent(intent_file):
+    """
+    Load network intent from a JSON file.
+    
+    Args:
+        intent_file (str): Path to the intent JSON file
+        
+    Returns:
+        dict: Network intent configuration
+    """
     with open(intent_file, "r", encoding="utf-8") as f:
         return json.load(f)
-
-
-def _router_num(router):
-    value = router.get("router_num")
-    if value is not None:
-        return int(value)
-
-    value = router.get("router_num_int")
-    if value is not None:
-        return int(value)
-
-    match = re.search(r"(\d+)$", router.get("hostname", ""))
-    if not match:
-        raise ValueError(f"Unable to infer numeric router id from hostname '{router.get('hostname', 'UNKNOWN')}'")
-    return int(match.group(1))
 
 
 def _vrf_defaults(intent_data):
@@ -41,14 +35,14 @@ def _core_interface_data(my_num, intf, routers_by_hostname):
     neighbor_name = intf.get("neighbor")
 
     if neighbor_name and neighbor_name in routers_by_hostname:
-        neighbor_num = _router_num(routers_by_hostname[neighbor_name])
+        neighbor_num = extract_router_num(routers_by_hostname[neighbor_name])
     else:
         neighbor_num = intf.get("neighbor_num")
 
     if neighbor_num is None:
         raise ValueError(f"Interface '{intf.get('name', 'UNKNOWN')}' is missing neighbor_num")
 
-    ip = generate_ip(my_num, neighbor_num, is_pe_ce=False)
+    ip = generate_ipv4(my_num, neighbor_num, is_pe_ce=False)
     octets = ip.split(".")
     network_ip = f"{octets[0]}.{octets[1]}.{octets[2]}.0"
 
@@ -63,7 +57,7 @@ def _core_interface_data(my_num, intf, routers_by_hostname):
 
 
 def _generate_p_data(router_cfg, routers_by_hostname):
-    my_num = _router_num(router_cfg)
+    my_num = extract_router_num(router_cfg)
     interfaces = []
     for intf in router_cfg.get("interfaces", []):
         if "vrf" in intf:
@@ -81,7 +75,7 @@ def _generate_p_data(router_cfg, routers_by_hostname):
 
 
 def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_by_hostname, routers_by_hostname):
-    my_num = _router_num(router_cfg)
+    my_num = extract_router_num(router_cfg)
     backbone_interfaces = []
     vrf_map = {}
 
@@ -96,7 +90,7 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
 
         ce_num = intf.get("neighbor_num") or intf.get("neighbor_CE_num")
         if ce_num is None and ce_router:
-            ce_num = _router_num(ce_router)
+            ce_num = extract_router_num(ce_router)
         if ce_num is None:
             raise ValueError(
                 f"PE router '{router_cfg['hostname']}' interface '{intf.get('name', 'UNKNOWN')}' has no CE id"
@@ -112,8 +106,8 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
                 "bgp_neighbors": [],
             }
 
-        pe_ip = generate_ip(my_num, ce_num, is_pe_ce=True)
-        ce_ip = generate_ip(ce_num, None, is_pe_ce=True, is_ce_context=True)
+        pe_ip = generate_ipv4(my_num, ce_num, is_pe_ce=True)
+        ce_ip = generate_ipv4(ce_num, None, is_pe_ce=True, is_ce_context=True)
 
         vrf_map[vrf_name]["interfaces"].append(
             {
@@ -137,7 +131,7 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
     if ibgp_to:
         target = pe_by_hostname.get(ibgp_to)
         if target:
-            target_num = _router_num(target)
+            target_num = extract_router_num(target)
             ibgp_neighbor = {
                 "ip": generate_loopback(target_num),
                 "remote_as": int(intent_data["backbone_as"]),
@@ -158,7 +152,7 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
 
 
 def _generate_ce_data(router_cfg, intent_data, pe_by_hostname):
-    my_num = _router_num(router_cfg)
+    my_num = extract_router_num(router_cfg)
     pe_hostname = router_cfg.get("connected_to")
 
     if pe_hostname and pe_hostname not in pe_by_hostname:
@@ -171,14 +165,26 @@ def _generate_ce_data(router_cfg, intent_data, pe_by_hostname):
         "as_number": int(router_cfg["as"]),
         "vrf_membership": router_cfg["vrf"],
         "interface_name": router_cfg.get("interface", "FastEthernet0/0"),
-        "ip": generate_ip(my_num, None, is_pe_ce=True, is_ce_context=True),
+        "ip": generate_ipv4(my_num, None, is_pe_ce=True, is_ce_context=True),
         "mask": "255.255.255.252",
-        "pe_ip": generate_ip(my_num, my_num, is_pe_ce=True, is_ce_context=False),
+        "pe_ip": generate_ipv4(my_num, my_num, is_pe_ce=True, is_ce_context=False),
         "backbone_as": int(intent_data["backbone_as"]),
     }
 
 
 def generate_router_data(intent_data):
+    """
+    Generate router configuration data from network intent.
+    
+    Processes P, PE, and CE routers separately, computing all addressing,
+    VRF configs, BGP neighbors, and OSPF parameters.
+    
+    Args:
+        intent_data (dict): Network intent configuration
+        
+    Returns:
+        list: List of router data dictionaries, one per router
+    """
     routers = intent_data.get("routers", {})
     p_routers = routers.get("P_ROUTERS", [])
     pe_routers = routers.get("PE_ROUTERS", [])

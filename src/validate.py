@@ -10,11 +10,27 @@ except ImportError:
     print("Please install it with: pip install jsonschema")
     sys.exit(1)
 
+from addressing import extract_router_num
+
 
 def validate_intent(intent_path="intent/network.json", schema_path="intent/schema.json"):
     """
-    Validate a network intent JSON file against its schema, then run
-    additional logical consistency checks specific to the MPLS/VPN structure.
+    Validate network intent against JSON schema and business rules.
+    
+    Performs two-stage validation:
+    1. JSON schema validation (structure)
+    2. Business logic validation (semantic consistency)
+    
+    Args:
+        intent_path (str): Path to network intent JSON file
+        schema_path (str): Path to JSON schema file
+        
+    Returns:
+        bool: True if validation passes
+        
+    Raises:
+        FileNotFoundError: If intent or schema file not found
+        ValidationError: If validation fails
     """
 
     if not os.path.exists(intent_path):
@@ -62,29 +78,13 @@ def _validate_business_rules(intent_data):
     pe_router_names = {pe["hostname"] for pe in pe_routers}
     ce_router_names = {ce["hostname"] for ce in ce_routers}
 
-    def _router_num(router):
-        value = router.get("router_num")
-        if value is not None:
-            return int(value)
-
-        value = router.get("router_num_int")
-        if value is not None:
-            return int(value)
-
-        match = re.search(r"(\d+)$", router.get("hostname", ""))
-        if not match:
-            raise ValueError(
-                f"Router '{router.get('hostname', 'UNKNOWN')}' must define router_num/router_num_int or end hostname with digits"
-            )
-        return int(match.group(1))
-
     # Check unique hostnames
     if len(set(all_router_names)) != len(all_router_names):
         raise ValueError("Duplicate router hostname detected")
 
     # Check unique router IDs in the provider core only (P + PE).
     # CE IDs may intentionally overlap with PE/P numbering in this model.
-    core_router_ids = [_router_num(r) for r in (p_routers + pe_routers)]
+    core_router_ids = [extract_router_num(r) for r in (p_routers + pe_routers)]
     if len(core_router_ids) != len(set(core_router_ids)):
         raise ValueError("Duplicate numeric router id detected in core routers (P/PE)")
 

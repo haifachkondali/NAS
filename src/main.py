@@ -46,6 +46,17 @@ def render_router_config(env, router_data, igp, ldp_enabled=False):
 
 
 def main(intent_file, output_folder, deploy=False):
+    """
+    Main generator function.
+    
+    Loads network intent JSON, validates it, generates router configs using Jinja2 templates,
+    and optionally deploys them to GNS3 routers.
+    
+    Args:
+        intent_file (str): Path to network intent JSON file
+        output_folder (str): Directory where generated configs will be saved
+        deploy (bool): Whether to deploy configs to routers via Telnet
+    """
     intent = load_intent(intent_file)
 
     igp = intent.get("igp", "").strip()
@@ -64,6 +75,7 @@ def main(intent_file, output_folder, deploy=False):
         sys.exit(1)
 
     deploy_list = []
+    errors = []
 
     for router_data in router_data_list:
         hostname = router_data.get("hostname", "UNKNOWN")
@@ -79,7 +91,9 @@ def main(intent_file, output_folder, deploy=False):
                 ldp_enabled=ldp_enabled
             )
         except Exception as e:
-            print(f"[ERROR] Failed to generate config for {hostname}: {e}")
+            error_msg = f"[ERROR] Failed to generate config for {hostname}: {e}"
+            print(error_msg)
+            errors.append(error_msg)
             continue
 
         output_path = os.path.join(output_folder, f"{hostname}_config.cfg")
@@ -99,6 +113,15 @@ def main(intent_file, output_folder, deploy=False):
 
         print(f"Starting parallel deployment for {len(deploy_list)} routers...")
         deploy_parallel(deploy_list, max_workers=8)
+
+    # Report generation status
+    if errors:
+        print(f"\n[WARNING] {len(errors)} router(s) failed to generate:")
+        for error in errors:
+            print(f"  {error}")
+        print(f"\n[OK] {len(router_data_list) - len(errors)}/{len(router_data_list)} routers generated successfully")
+    else:
+        print(f"\n[OK] All {len(router_data_list)} routers generated successfully")
 
 
 if __name__ == "__main__":

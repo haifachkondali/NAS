@@ -9,7 +9,15 @@ from datetime import datetime
 
 
 def find_project_root(path):
-    """Trouver la racine d'un projet GNS3."""
+    """
+    Find GNS3 project root by locating project-files/dynamips directory.
+    
+    Args:
+        path (str): Starting path to search from
+        
+    Returns:
+        str or None: Project root path if found, None otherwise
+    """
     current = os.path.abspath(path)
     for _ in range(10):
         if os.path.exists(os.path.join(current, "project-files", "dynamips")):
@@ -22,7 +30,17 @@ def find_project_root(path):
 
 
 def find_router_mapping(project_dir):
-    """Construire le mapping {hostname: (uuid_folder, node_id)}."""
+    """
+    Build mapping of router hostnames to GNS3 UUIDs and node IDs.
+    
+    Scans all startup-config files to extract hostname and map to GNS3 structure.
+    
+    Args:
+        project_dir (str): GNS3 project root directory
+        
+    Returns:
+        dict: Mapping of {hostname: (uuid_folder, node_id)}
+    """
     dynamips_dir = os.path.join(project_dir, "project-files", "dynamips")
     mapping = {}
     
@@ -44,7 +62,19 @@ def find_router_mapping(project_dir):
 
 
 def fix_config(content, hostname):
-    """Appliquer les corrections nécessaires à la configuration."""
+    """
+    Apply necessary corrections to GNS3 generated configurations.
+    
+    - Removes invalid update-source directives for eBGP peers
+    - Ensures all interfaces have 'no shutdown' command
+    
+    Args:
+        content (str): Configuration file content
+        hostname (str): Router hostname for logging
+        
+    Returns:
+        str: Fixed configuration content
+    """
     
     # Supprimer update-source invalide pour eBGP (conserve le saut de ligne)
     content = re.sub(
@@ -86,38 +116,6 @@ def fix_config(content, hostname):
         if not any('no shutdown' in l.lower() for l in interface_lines):
             interface_lines.append(' no shutdown')
         fixed.extend(interface_lines)
-    
-    content = '\n'.join(fixed)
-    
-    # Ajouter redistribute et network dans BGP si manquants
-    if 'address-family ipv6' in content:
-        lines = content.split('\n')
-        fixed = []
-        in_af = False
-        
-        for line in lines:
-            fixed.append(line)
-            if 'address-family ipv6' in line:
-                in_af = True
-            elif 'exit-address-family' in line and in_af:
-                in_af = False
-                fixed.pop()
-                
-                rip_match = re.search(r'ipv6 router rip\s+(\S+)', content)
-                if rip_match and f'redistribute rip {rip_match.group(1)}' not in content:
-                    fixed.append(f' redistribute rip {rip_match.group(1)}')
-                elif 'ipv6 router ospf' in content and 'redistribute ospf 1' not in content:
-                    fixed.append(' redistribute ospf 1')
-                
-                loopback_match = re.search(r'ipv6 address (FC00:0:0:\d+::1)/128', content)
-                if loopback_match:
-                    network_cmd = f' network {loopback_match.group(1)}/128'
-                    if network_cmd not in content:
-                        fixed.append(network_cmd)
-                
-                fixed.append(line)
-        
-        content = '\n'.join(fixed)
     
     return content
 

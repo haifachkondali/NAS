@@ -6,8 +6,8 @@ This file collects design decisions, conventions, and implementation details use
 
 ## Interface addressing conventions
 
-- Physical interfaces participating in the lab are **IPv6-only**.  
-- IPv4 is intentionally disabled on these links to keep the focus on IPv6 routing (RIPng/OSPFv3/BGP for IPv6).
+- Physical interfaces use **IPv4 addressing** throughout the backbone and customer access links.
+- **Note**: Initial design considered IPv6-only, but current implementation uses IPv4 exclusively.
 
 ### Why `no ip address` in templates?
 

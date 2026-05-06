@@ -1,5 +1,5 @@
 {
-  "backbone_as": 65100,
+  "backbone_as": 100,
   "igp": "OSPF",
   "ldp_enabled": true,
 
@@ -12,8 +12,7 @@
     "P_ROUTERS": [
       {
         "hostname": "P1",
-        "port":5018,
-        "config_file_path":"P1.cfg",
+        "port":5001,
         "router_num" : 2,
         "interfaces": [
           { "name": "GigabitEthernet1/0", "neighbor_num":1, "neighbor": "PE1", "mpls": true },
@@ -23,7 +22,7 @@
       {
         "hostname": "P2",
         "config_file_path":"P2.cfg",
-        "port":5020,
+        "port":5002,
         "router_num" : 3,
         "interfaces": [
           { "name": "GigabitEthernet1/0", "neighbor_num":2, "neighbor": "PE2", "mpls": true },
@@ -35,8 +34,7 @@
     "PE_ROUTERS": [
       {
         "hostname": "PE1",
-        "config_file_path":"PE1.cfg",
-        "port":5017,
+        "port":5000,
         "ibgp_to": "PE2",
         "router_num" : 1,
         "interfaces": [
@@ -47,8 +45,7 @@
       },
       {
         "hostname": "PE2",
-        "config_file_path":"PE2.cfg",
-        "port":5023,
+        "port":5003,
         "ibgp_to": "PE1",
         "router_num" : 4,
         "interfaces": [
@@ -60,10 +57,10 @@
     ],
 
     "CE_ROUTERS": [
-      { "hostname": "CE1", "config_file_path":"CE1.cfg", "port":5024, "as": 65001, "vrf": "CUST_A", "connected_to": "PE1" },
-      { "hostname": "CE2", "config_file_path":"CE2.cfg", "port":5026, "as": 65002, "vrf": "CUST_A", "connected_to": "PE2" },
-      { "hostname": "CE3", "config_file_path":"CE3.cfg", "port":5025, "as": 65003, "vrf": "CUST_B", "connected_to": "PE1" },
-      { "hostname": "CE4", "config_file_path":"CE4.cfg", "port":5027, "as": 65004, "vrf": "CUST_B", "connected_to": "PE2" }
+      { "hostname": "CE1", "port":5004, "as": 10, "vrf": "CUST_A", "connected_to": "PE1" },
+      { "hostname": "CE2", "port":5006, "as": 10, "vrf": "CUST_A", "connected_to": "PE2" },
+      { "hostname": "CE3", "port":5005, "as": 20, "vrf": "CUST_B", "connected_to": "PE1" },
+      { "hostname": "CE4", "port":5007, "as": 20, "vrf": "CUST_B", "connected_to": "PE2" }
     ]
   }
 }
