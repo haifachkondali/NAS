@@ -35,9 +35,9 @@ def find_best_source_dir(target_dir: str) -> str:
     ]
     
     simple_candidates = [
-        os.path.join(script_dir, "output"),
-        os.path.join(project_root, "output") if project_root else None,
-        "output",
+        os.path.join(os.path.dirname(script_dir), "output"),  # Remonte d'un cran (vers NAS/output)
+        os.path.join(script_dir, "output"),                  # Cherche dans utils/output (au cas où)
+        "output",                                            # Chemin relatif simple
     ]
     
     if router_count >= 14:

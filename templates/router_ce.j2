@@ -10,3 +10,4 @@ router bgp {{ as_number }}
  bgp log-neighbor-changes
  redistribute connected
  neighbor {{ pe_ip }} remote-as {{ backbone_as }}
+ neighbor {{ pe_ip }} activate
