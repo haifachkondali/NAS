@@ -1,5 +1,4 @@
 import json
-import re
 
 from addressing import generate_ipv4
 
@@ -129,12 +128,12 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
             target = pe_by_hostname.get(ibgp_to)
             if target:
                 target_num = target.get("router_num")
-            ibgp_neighbor = {
-                "ip": generate_ipv4(target_num, None, lb_prefix), # Loopback du voisin PE
-                "remote_as": int(intent_data["backbone_as"]),
-                "hostname": target["hostname"],
-                "update_source": "Loopback0"
-            }
+                ibgp_neighbor = {
+                    "ip": generate_ipv4(target_num, None, lb_prefix), # Loopback du voisin PE
+                    "remote_as": int(intent_data["backbone_as"]),
+                    "hostname": target["hostname"],
+                    "update_source": "Loopback0"
+                }
 
     return {
         "hostname": router_cfg["hostname"],

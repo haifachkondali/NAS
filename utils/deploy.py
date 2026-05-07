@@ -116,8 +116,8 @@ def fix_config(content, hostname):
         if not any('no shutdown' in l.lower() for l in interface_lines):
             interface_lines.append(' no shutdown')
         fixed.extend(interface_lines)
-    
-    return content
+
+    return '\n'.join(fixed)
 
 
 def deploy_configs(source_dir, target_dir, create_backup=True):
