@@ -61,17 +61,16 @@ def find_router_mapping(project_dir):
     return mapping
 
 
-def fix_config(content, hostname):
+def fix_config(content):
     """
     Apply necessary corrections to GNS3 generated configurations.
-    
+
     - Removes invalid update-source directives for eBGP peers
     - Ensures all interfaces have 'no shutdown' command
-    
+
     Args:
         content (str): Configuration file content
-        hostname (str): Router hostname for logging
-        
+
     Returns:
         str: Fixed configuration content
     """
@@ -161,7 +160,7 @@ def deploy_configs(source_dir, target_dir, create_backup=True):
         target_file = os.path.join(dynamips_dir, uuid_folder, "configs", f"{node_id}_startup-config.cfg")
         
         with open(src_file, "r", encoding="utf-8", errors="ignore") as f:
-            content = fix_config(f.read(), hostname)
+            content = fix_config(f.read())
         
         if create_backup and os.path.exists(target_file):
             shutil.copy2(target_file, os.path.join(backup_dir, f"{hostname}_{node_id}_startup-config.cfg"))

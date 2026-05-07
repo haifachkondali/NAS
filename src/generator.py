@@ -1,5 +1,4 @@
 import json
-
 from addressing import generate_ipv4
 
 
@@ -151,10 +150,9 @@ def _generate_pe_data(router_cfg, intent_data, ce_by_hostname, vrf_defaults, pe_
 def _generate_ce_data(router_cfg, intent_data, pe_by_hostname):
     my_num = router_cfg.get("router_num")
     pe_hostname = router_cfg.get("connected_to")
-    
+
     pe_router_obj = pe_by_hostname.get(pe_hostname)
-    pe_num = pe_router_obj.get("router_num") if pe_router_obj else None
-    
+
     pe_ce_prefix = intent_data.get("address_prefixes").get("pe_ce")
 
     if pe_hostname and pe_hostname not in pe_by_hostname:

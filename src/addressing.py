@@ -35,6 +35,3 @@ def generate_ipv4(my_num, neighbor_num, base_prefix, is_pe_ce=False, is_ce_conte
 
 
 
-def generate_loopback(router_num):
-    """Generate a deterministic loopback for a router numeric ID."""
-    return f"10.0.0.{int(router_num)}"
