@@ -7,11 +7,10 @@ import sys
 
 
 def print_help():
-    print("Usage: python main.py [--file <intent_file>] [--output <output_folder>] [--deploy]")
+    print("Usage: python main.py [--file <intent_file>] [--output <output_folder>]")
     print("\nOptions:")
     print("  --file, -f      Path to the intent file inside intent/ (default: network.json)")
     print("  --output, -o    Path to output folder (default: output/)")
-    print("  --deploy, -d    Deploy configs to routers after generation")
     print("  --help, -h      Show this help message")
 
 
@@ -45,17 +44,15 @@ def render_router_config(env, router_data, igp, ldp_enabled=False):
     return template.render(**router_data, igp=igp, ldp_enabled=ldp_enabled)
 
 
-def main(intent_file, output_folder, deploy=False):
+def main(intent_file, output_folder):
     """
     Main generator function.
     
-    Loads network intent JSON, validates it, generates router configs using Jinja2 templates,
-    and optionally deploys them to GNS3 routers.
+    Loads network intent JSON, validates it, and generates router configs using Jinja2 templates.
     
     Args:
         intent_file (str): Path to network intent JSON file
         output_folder (str): Directory where generated configs will be saved
-        deploy (bool): Whether to deploy configs to routers via Telnet
     """
     intent = load_intent(intent_file)
 
@@ -74,7 +71,6 @@ def main(intent_file, output_folder, deploy=False):
         print("[ERROR] generate_router_data(intent) must return a list of router data dictionaries.")
         sys.exit(1)
 
-    deploy_list = []
     errors = []
 
     for router_data in router_data_list:
@@ -100,20 +96,6 @@ def main(intent_file, output_folder, deploy=False):
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(full_config)
 
-        if deploy and "port" in router_data:
-            deploy_list.append({
-                "hostname": hostname,
-                "port": router_data["port"],
-                "as_number": router_data.get("as_number"),
-                "config_file_path": output_path
-            })
-
-    if deploy and deploy_list:
-        from remote_deploy import deploy_parallel
-
-        print(f"Starting parallel deployment for {len(deploy_list)} routers...")
-        deploy_parallel(deploy_list, max_workers=8)
-
     # Report generation status
     if errors:
         print(f"\n[WARNING] {len(errors)} router(s) failed to generate:")
@@ -130,8 +112,6 @@ if __name__ == "__main__":
                         help="Path to the intent file inside intent/")
     parser.add_argument("--output", "-o", type=str, default="output/",
                         help="Path to output folder (default: output/)")
-    parser.add_argument("--deploy", "-d", action="store_true",
-                        help="Deploy configs to routers after generation")
     parser.add_argument("--help", "-h", action="store_true",
                         help="Show help message and exit")
 
@@ -143,9 +123,6 @@ if __name__ == "__main__":
 
     intent_file = os.path.join("intent", args.file)
     output_folder = args.output
-
-    if args.deploy:
-        print("Deployment after generation is enabled.")
 
     if not os.path.exists(intent_file):
         print(f"Erreur : le fichier d'intention '{intent_file}' est introuvable.")
@@ -159,4 +136,4 @@ if __name__ == "__main__":
         print(f"[ERROR] Intent file validation failed: {e}")
         sys.exit(1)
 
-    main(intent_file, output_folder, deploy=args.deploy)
+    main(intent_file, output_folder)
